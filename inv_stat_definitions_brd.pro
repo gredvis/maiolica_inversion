@@ -133,53 +133,20 @@ PRO inv_stat_definitions_brd,sim,scont=scont,ccont=ccont,sflask=sflask,cflask=cf
                                 ; values between 1000 and 1600 ppbv, 19.03.2012
   
                                 ; number of stations
-  ncn     = n_elements(statscn)
   nev     = n_elements(statsev)  
+  ncn     = n_elements(statscn)
   nagage  = n_elements(statsagage)
-  
-  ncont   = 0
-  FOR i=0,ncn-1 DO BEGIN
-     result = WHERE(statscn[i] eq sim.stats,cn)
-     IF cn eq 1L THEN ncont  += cn
-     IF cn gt 1L THEN stop
-  ENDFOR
-  
+    
   nflask  = 0
   FOR i=0,nev-1 DO BEGIN
      result = WHERE(statsev[i] eq sim.stats,cev)
      IF cev eq 1L THEN nflask += 1
      IF cev gt 1L THEN stop
   ENDFOR
-  
-  nhf     = 0
-  FOR i=0,nagage-1 DO BEGIN
-     result = WHERE(statsagage[i] eq sim.stats,cagage)
-     IF cagage eq 1L THEN nhf += 1
-     IF cagage gt 1L THEN stop
-  ENDFOR
-  
-  IF ncont gt 0L  THEN BEGIN
-     scont  = StrArr(ncont)
-     ccont  = StrArr(ncont)
-  ENDIF
+
   IF nflask gt 0L THEN BEGIN
      sflask = StrArr(nflask)
      cflask = StrArr(nflask)
-  ENDIF    
-  IF nhf gt 0L THEN sagage = StrArr(nhf)
-
-  IF ncont gt 0L THEN BEGIN  
-     j = 0
-     FOR i=0,ncn-1 DO BEGIN
-        result = WHERE(statscn[i] eq sim.stats,cn)
-        IF cn eq 1L THEN BEGIN
-           scont[j] = statscn[i]
-           ccont[j] = contrcn[i]
-           j += 1
-        ENDIF
-     ENDFOR
-  ENDIF
-  IF nflask gt 0L THEN BEGIN
      j = 0
      FOR i=0,nev-1 DO BEGIN
         result = WHERE(statsev[i] eq sim.stats,cev)
@@ -190,15 +157,49 @@ PRO inv_stat_definitions_brd,sim,scont=scont,ccont=ccont,sflask=sflask,cflask=cf
         ENDIF
      ENDFOR
   ENDIF
-  IF nhf gt 0L THEN BEGIN
-     j = 0
-     FOR i=0,nagage-1 DO BEGIN
-        result = WHERE(statsagage[i] eq sim.stats,cagage)  
-        IF cagage eq 1L THEN BEGIN
-           sagage[j] = statsagage[i]
-           j += 1
-        ENDIF
+
+  IF NOT keyword_set(sim.flask) THEN BEGIN
+     ncont   = 0
+     FOR i=0,ncn-1 DO BEGIN
+        result = WHERE(statscn[i] eq sim.stats,cn)
+        IF cn eq 1L THEN ncont  += cn
+        IF cn gt 1L THEN stop
      ENDFOR
+
+     nhf     = 0
+     FOR i=0,nagage-1 DO BEGIN
+        result = WHERE(statsagage[i] eq sim.stats,cagage)
+        IF cagage eq 1L THEN nhf += 1
+        IF cagage gt 1L THEN stop
+     ENDFOR
+
+     IF ncont gt 0L  THEN BEGIN
+        scont  = StrArr(ncont)
+        ccont  = StrArr(ncont)
+
+        j = 0
+        FOR i=0,ncn-1 DO BEGIN
+           result = WHERE(statscn[i] eq sim.stats,cn)
+           IF cn eq 1L THEN BEGIN
+              scont[j] = statscn[i]
+              ccont[j] = contrcn[i]
+              j += 1
+           ENDIF
+        ENDFOR
+     ENDIF
+
+     IF nhf gt 0L THEN BEGIN
+        sagage = StrArr(nhf)
+
+        j = 0
+        FOR i=0,nagage-1 DO BEGIN
+           result = WHERE(statsagage[i] eq sim.stats,cagage)  
+           IF cagage eq 1L THEN BEGIN
+              sagage[j] = statsagage[i]
+              j += 1
+           ENDIF
+        ENDFOR
+     ENDIF
   ENDIF
 
 END

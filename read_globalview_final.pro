@@ -57,7 +57,6 @@ PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
   schalt  = ['1984','1988','1992','1996','2000','2004','2008']
   mm      = ['01','02','03','04','05','06','07','08','09','10','11','12']
   nmonths = n_elements(days)
-  pi      = 3.141592653589793
   
   ndat = (2008-1984+1)*12L ; number of output dates
   nlat = 41                ; number of latitudes
@@ -83,7 +82,7 @@ PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
 
   ; compute latitudes
   sinlat = -1.+0.05*findgen(nlat)
-  lat    = asin(sinlat)*180./pi
+  lat    = asin(sinlat)*180./!pi
 
   ;compute monthly methane values
   jahr   = floor(time)
@@ -128,9 +127,17 @@ PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
 
   std = FltArr(ndat,nlat)
   FOR id=0,ndat-1 DO BEGIN
-    indd = WHERE(yyyymm eq uyyyymm[id],cd)
-    FOR iy=0,nlat-1 DO ch4[id,iy] = mean(ch4weekly[indd,iy])
-    FOR iy=0,nlat-1 DO std[id,iy] = stddev(ch4weekly[indd,iy])
+     indd = WHERE(yyyymm eq uyyyymm[id],cd)
+     FOR iy=0,nlat-1 DO ch4[id,iy] = mean(ch4weekly[indd,iy])
+     FOR iy=0,nlat-1 DO std[id,iy] = stddev(ch4weekly[indd,iy])
+  ENDFOR
+  
+  ;; expand data set by repeating last year 2008
+  i2008 = WHERE(STRMID(uyyyymm,0,4) EQ '2008')
+  FOR i=0,3 DO BEGIN
+     ch4 = [ch4,ch4[i2008,*]]
+     year = STRING(2009+i,format='(i4)')
+     uyyyymm = [uyyyymm,year+mm]
   ENDFOR
 
   print, 'Processing of read_globalview completed.'

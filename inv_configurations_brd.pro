@@ -76,7 +76,7 @@
 ;
 ;   DB, 04 Jan 2017:  first implementation
 ;-
-FUNCTION inv_configurations_brd,run=run,ok=ok
+FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
 
   ;***********************************************
   ; define inversion parameters
@@ -101,8 +101,7 @@ FUNCTION inv_configurations_brd,run=run,ok=ok
   nobg = 0                                               ; use only non-background values (always set to 0!)
 
   ;; station configuration
-  sconfig = 'flask'             ; options are 'flask', 'all', 'special'
-  sconfig = 'all'
+  IF n_elements(sconfig) EQ 0 THEN sconfig = 'flask' ; options are 'flask', 'all', 'special'
 
   ;; flags for certain station configurations
   flask   = sconfig EQ 'flask'
@@ -118,42 +117,107 @@ FUNCTION inv_configurations_brd,run=run,ok=ok
   brw     = 0
 
   CASE run OF
-     'nocomm1': scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,1.65,$
-                        1.65,1.05,1.65,1.65,1.05,1.05,1.65,1.05,1.65,1.65,1.65,1.65,$
-                        0.55,0.55,0.55,0.55,0.55,0.55,0.55,1.66,1.66,1.66,1.66,1.66,$
-                        1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.45,1.45,1.45,1.45]
-     'nocomm2': scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,$
-                        1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,$
-                        1.55,1.55,1.55,1.55,1.55,1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,$
-                        1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0]
-     'nocomm3': BEGIN           ;keeppos0 change fcorr all
-        keeppos=0
-        scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,$
-                1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,$
-                1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.8,1.8,1.8,1.8]
+     'NEW_DLR': BEGIN ; probably the final setting used!
+        ;; keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori
+        ;; uncert from literature, taking into account diff regions and also fact that we 
+        ;; optimize each month 4 times
+        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.40,0.40,0.40,0.40,$
+                0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.30,0.30,$
+                0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.4,0.4,0.4,0.4]
      END
-     'nocomm4': BEGIN           ;keeppos1 change fcorr all
-        scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.65,0.65,0.65,$
-                0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.55,0.55,0.55,0.55,$
-                0.55,0.55,0.55,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.4,$
-                0.4,0.4,0.4]
+     'NEW_DLR_large': BEGIN
+        ;; keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori
+        ;; uncert from literature, taking into account diff regions and also fact that we 
+        ;; optimize each month 4 times 22.4000
+        keeppos = 0
+        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.20,0.20,$
+                0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.4,0.4,0.4,0.4]
      END
-     'antarctica_scaled': BEGIN ;keeppos1 change fcorr all , antarctica scaled
-        scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,$
-                1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,$
-                1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,0.9,0.9,0.9,0.9]
+     '22.4': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times 22.4
+        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.20,0.20,$
+                0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.4,0.4,0.4,0.4]
      END
-     'tropics_scaled': BEGIN    ;keeppos1 change fcorr all , tropics scaled
-        syyyymm='198902' & eyyyymm='199312'
-        scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,$
-                1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,$
-                1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,0.9,0.9,0.9,0.9]
+     '23.7': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times 23.7
+        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.30,0.30,$
+                0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.4,0.4,0.4,0.4]
      END
-     'nocomm5': BEGIN           ;keeppos1 change fcorr all
-        syyyymm='198902' & eyyyymm='199312'
-        scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,$
-                0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,$
-                0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27]
+     '23.7+0.42': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times 23.7 + 0.42
+        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.30,0.30,$
+                0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.42,0.42,0.42,0.42]
+     END
+     '26.1': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times 26.1000
+        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.40,0.40,$
+                0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.4,0.4,0.4,0.4]
+     END
+     '32.8': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times 32.8000
+        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]
+     END
+     'all_flask_large_uncert': BEGIN
+        ;;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori uncert large
+        scaleq=[1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.10,1.10,1.10,1.10,1.10,1.10,1.10,$
+                1.10,1.10,1.10,1.10,1.10,1.10,1.2,1.2,1.2,1.2,1.2,1.2,1.2,2.0,2.0,2.0,2.0,2.0,$
+                2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.50,2.50,2.50,2.50]
+     END
+     'all_flask_lit_prior_a': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times
+        scaleq=[0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.10,0.10,0.10,0.10,0.10,$
+                0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.12,0.12,0.12,0.12,0.12,0.12,0.12,0.25,$
+                0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.30,0.30,0.30,0.30]
+     END
+     'all_flask_lit_prior_b': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times
+        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,$
+                0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.50,0.50,$
+                0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.40,0.40,0.40,0.40]
+     END
+     'all_flask_lit_prior_c': BEGIN
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
+        ;; apriori uncert from litterature, taking into account diff regions and also 
+        ;; fact that we optimize each month 4 times
+        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]
+     END
+     'all_flask_inv_run_sp23a': BEGIN ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
+        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.70,0.70,0.70,0.70,0.70,$
+                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,$
+                0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.70,0.70,0.70,0.70]
+     END
+     'all_flask_inv_run_sp23b': BEGIN ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
+        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.10,0.40,0.70,0.70,0.70,0.70,0.70,$
+                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,$
+                0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.20,0.20,0.20,0.20]
+     END
+     'all_flask_inv_run_sp23c': BEGIN ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
+        scaleq=[0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,$
+                0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,$
+                0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10]
      END
      'all_flask': BEGIN         ;keeppos1 change fcorr all flask
         scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.50,0.50,0.50,0.50,0.50,$
@@ -200,107 +264,42 @@ FUNCTION inv_configurations_brd,run=run,ok=ok
                 0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,$
                 0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.05,0.20,0.20,0.20,0.20,0.20,0.20,0.20]
      END
-     'all_flask_inv_run_sp23a': BEGIN ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
-        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.70,0.70,0.70,0.70,0.70,$
-                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,$
-                0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.70,0.70,0.70,0.70]
+     'antarctica_scaled': BEGIN ;keeppos1 change fcorr all , antarctica scaled
+        scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,$
+                1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,$
+                1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,0.9,0.9,0.9,0.9]
      END
-     'all_flask_inv_run_sp23b': BEGIN ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
-        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.10,0.40,0.70,0.70,0.70,0.70,0.70,$
-                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,$
-                0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.20,0.20,0.20,0.20]
+     'tropics_scaled': BEGIN    ;keeppos1 change fcorr all , tropics scaled
+        syyyymm='198902' & eyyyymm='199312'
+        scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,$
+                1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,$
+                1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,0.9,0.9,0.9,0.9]
      END
-     'all_flask_inv_run_sp23c': BEGIN ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
-        scaleq=[0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,$
-                0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,$
-                0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10]
+     'nocomm1': scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,1.65,$
+                        1.65,1.05,1.65,1.65,1.05,1.05,1.65,1.05,1.65,1.65,1.65,1.65,$
+                        0.55,0.55,0.55,0.55,0.55,0.55,0.55,1.66,1.66,1.66,1.66,1.66,$
+                        1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.45,1.45,1.45,1.45]
+     'nocomm2': scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,$
+                        1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,$
+                        1.55,1.55,1.55,1.55,1.55,1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,$
+                        1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0]
+     'nocomm3': BEGIN           ;keeppos0 change fcorr all
+        keeppos=0
+        scaleq=[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,$
+                1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,$
+                1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.8,1.8,1.8,1.8]
      END
-     'all_flask_large_uncert': BEGIN
-        ;;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori uncert large
-        scaleq=[1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.10,1.10,1.10,1.10,1.10,1.10,1.10,$
-                1.10,1.10,1.10,1.10,1.10,1.10,1.2,1.2,1.2,1.2,1.2,1.2,1.2,2.0,2.0,2.0,2.0,2.0,$
-                2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.50,2.50,2.50,2.50]
+     'nocomm4': BEGIN           ;keeppos1 change fcorr all
+        scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.65,0.65,0.65,$
+                0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.55,0.55,0.55,0.55,$
+                0.55,0.55,0.55,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.4,$
+                0.4,0.4,0.4]
      END
-     'all_flask_lit_prior_a': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times
-        scaleq=[0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.15,0.10,0.10,0.10,0.10,0.10,$
-                0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.12,0.12,0.12,0.12,0.12,0.12,0.12,0.25,$
-                0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.30,0.30,0.30,0.30]
-     END
-     'all_flask_lit_prior_b': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times
-        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,$
-                0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.50,0.50,$
-                0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.40,0.40,0.40,0.40]
-     END
-     'all_flask_lit_prior_c': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times
-        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]
-     END
-     '32.8': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times 32.8000
-        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]
-     END
-     '26.1': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times 26.1000
-        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.40,0.40,$
-                0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.4,0.4,0.4,0.4]
-     END
-     '23.7': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times 23.7
-        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.30,0.30,$
-                0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.4,0.4,0.4,0.4]
-     END
-     '23.7+0.42': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times 23.7 + 0.42
-        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.30,0.30,$
-                0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.42,0.42,0.42,0.42]
-     END
-     '22.4': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times 22.4
-        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.20,0.20,$
-                0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.4,0.4,0.4,0.4]
-     END
-     'NEW_DLR': BEGIN ; probably the final setting used!
-        ;; keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori
-        ;; uncert from literature, taking into account diff regions and also fact that we 
-        ;; optimize each month 4 times
-        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.40,0.40,0.40,0.40,$
-                0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.30,0.30,$
-                0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.4,0.4,0.4,0.4]
-     END
-     'NEW_DLR_large': BEGIN
-        ;; keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori
-        ;; uncert from literature, taking into account diff regions and also fact that we 
-        ;; optimize each month 4 times 22.4000
-        keeppos = 0
-        scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.20,0.20,$
-                0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.4,0.4,0.4,0.4]
+     'nocomm5': BEGIN           ;keeppos1 change fcorr all
+        syyyymm='198902' & eyyyymm='199312'
+        scaleq=[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,$
+                0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,$
+                0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27]
      END
      ELSE: BEGIN
         print,'invalid run'

@@ -46,118 +46,202 @@
 ;
 ; PROCEDURE:
 ;
-;   inv_obsvector_mon_weekly
+;   daily_means: 
+;        compute daily means for 1 year of observational data
+;        Called by routine collect_data
 ;
-;     Read all available data from continuous and flask stations in given year
-;     Output daily or weekly means in monthly tables.
+;   weekly_means:
+;        compute weekly means for one year of daily mean observation data
+;        Called by routine collect_data after call to daily_means
+;
+;   collect_data
+;        Read station data and process into weekly means
+;        Called by main program for each of the three station types
+;        ('flask','agage','continuous')
 ;
 ; EXAMPLE:
 ;
 ; MODIFICATION HISTORY:
-; CSP 19 September 2011
+;   CSP 19 September 2011
+;   Dominik Brunner, 8 Jan 2017: major overhaul, routines shortened and better
+;                organized
 ;-
 
-;--------------------------------------------------------------------
-PRO determine_dtg,selyear,j,m,d,dtg=dtg
+;---------------------------- daily means ----------------------------------
 
-  indy     = WHERE(STRCOMPRESS(string(j),/REM) eq selyear,cy)
-  IF cy gt 0L THEN BEGIN
-    yyyy     = StrArr(cy)
-    mm       = StrArr(cy)
-    dd       = StrArr(cy)
-
-    yyyy[*]  = STRCOMPRESS(string(j[indy]),/REM)
-    mm[*]    = STRCOMPRESS(string(m[indy]),/REM)
-    dd[*]    = STRCOMPRESS(string(d[indy]),/REM)
-
-    indm     = WHERE(m[indy] le 9,cm)
-    indd     = WHERE(d[indy] le 9,cd)
-    IF cm gt 0L THEN FOR i=0,cm-1 DO mm[indm[i]] = '0'+STRCOMPRESS(string(m[indy[indm[i]]]),/REM)
-    IF cd gt 0L THEN FOR i=0,cd-1 DO dd[indd[i]] = '0'+STRCOMPRESS(string(d[indy[indd[i]]]),/REM)     
-    dtg      = yyyy+mm+dd+'0000'
-  ENDIF
-
-END
-
-;--------------------------------------------------------------------
-;*******************************************
-; compute daily means of observational data
-;*******************************************
-PRO daily_means,dtgdat=dtgdat,ch4=ch4,out=ch4daily,timestamp=timestamp,obstime=obstime,ndays=ndays
-
-  k       = 0
-  ndays   = 0
-  mmonth  = STRMID(dtgdat,4,2) ; which months
-  s       = sort(fix(mmonth))
-  smonth  = mmonth(s)
-  u       = uniq(smonth)
-  umonth  = smonth(u)
-  nmonths = n_elements(umonth) ; number of months with data
-
-  ch4work   = FltArr(366)
-  stampwork = StrArr(366)
-  indexwork = IntArr(366)
-
-  FOR im = 0,nmonths-1 DO BEGIN
-
-    indm   = WHERE(mmonth eq umonth[im],cm)
-    IF cm gt 0L THEN BEGIN             ; which days in month im
-      mdays = STRMID(dtgdat[indm],6,2) ; which days     
-      s     = sort(mdays)
-      sdays  = mdays(s)
-      u      = uniq(sdays)
-      udays  = sdays(u)                 ; unique days
-      nd     = n_elements(udays)        ; number of unique days
-
-      FOR iu=0,nd-1 DO BEGIN            ; loop over number of unique days
-        indday = WHERE(udays[iu] eq mdays,cday)
-        IF cday gt 0L THEN BEGIN
-          ch4work[k]   = mean(ch4[indm[indday]],/NAN)
-          stampwork[k] = dtgdat[indm[indday[0]]]
-          IF finite(ch4work[k]) eq 1 THEN ndays += 1
-          k += 1
-        ENDIF ELSE BEGIN
-          ch4work[k] = !VALUES.F_NAN
-        ENDELSE 
-      ENDFOR
-    ENDIF                               ; endif data available in month im
-  ENDFOR                                ; end loop over months
-
-  IF ndays gt 0L THEN BEGIN
-    ch4daily    = FltArr(ndays)
-    timestamp   = StrArr(ndays)
-    obstime     = IntArr(ndays)
-
-    ind = WHERE(finite(ch4work[0:ndays-1]) eq 1,cf)
-    ch4daily[*]  = ch4work[ind]
-    timestamp[*] = stampwork[ind]
-    obstime[*]   = indexwork[ind]
-  ENDIF ELSE BEGIN
-    ch4daily[*] = !VALUES.F_NAN
-  ENDELSE
-
-END
-
-;; *******************************************************************************
-;;  Read station data and process into weekly means
-;; *******************************************************************************
 ;+
+; NAME:
+;   daily_means
+;
+; PURPOSE:
+;   compute daily means for 1 year of observational data
+;
+; CALLING SEQUENCE:
+;   daily_means,dtgin=dtgin,ch4in=ch4in,ch4out=ch4out,dtgout=dtgout,ndays=ndays
+;
+; INPUTS:
+;    dtgin  StrArr(nin)  : date/time of CH4 data in format YYYYMMDDhhmm
+;    ch4in  LonArr(nin)  : CH4 data
+;
+; OUTPUTS:
+;    ch4out FltArr(ndays): daily mean CH4 data
+;    dtgout StrArr(ndays): corresponding dates (YYYYMMDD)
+;-
+PRO daily_means,dtgin=dtgin,ch4in=ch4in,ch4out=ch4out,dtgout=dtgout,ndays=ndays
+
+  ;; sort in ascending order (although should already be sorted)
+  ndat = n_elements(dtgin)
+
+  yyyymmdd = STRMID(dtgin,0,8)  ; clip hours
+  s = sort(yyyymmdd)
+  syyyymmdd=yyyymmdd[s]
+  sch4=ch4in[s]
+
+  u = uniq(syyyymmdd)
+
+  ndays = n_elements(u)
+  ch4out = FltArr(ndays)
+  dtgout = syyyymmdd[u]
+  
+  ci = 0L
+  FOR i = 0L,ndays-1 DO BEGIN
+     cnt = 0L
+     mval = 0.
+     WHILE syyyymmdd[ci] EQ dtgout[i] DO BEGIN
+        mval += sch4[ci]
+        cnt  += 1L
+        ci += 1L
+        IF ci EQ ndat THEN BREAK
+     ENDWHILE
+     ch4out[i] = mval/float(cnt)
+  ENDFOR
+
+END
+
+;---------------------------- weekly means ----------------------------------
+
+;+
+; NAME:
+;   weekly_mean
+;
+; PURPOSE:
+;   compute weekly means for one year of daily mean observation data
+;
+; CALLING SEQUENCE:
+;   weekly_means,dtgin=dtgin,ch4in=ch4in,ch4out=ch4out,dtgout=dtgout,numweek=numweek
+;
+; INPUTS:
+;    dtgin  StrArr(nin)   : date/time of daily mean CH4 data in format YYYYMMDD
+;    ch4in  LonArr(nin)   : daily mean CH4 data
+;
+; OUTPUTS:
+;    ch4week FltArr(nweek): weekly mean CH4 data
+;    dtgweek StrArr(nweek): corresponding central dates (YYYYMMDD)
+;    numweek IntArr(nweek): number of daily measurement data points contributing
+;    nweek   Integer      : total number of weeks for which data was found
+;-
+;---------------------------------------------------------------------------------
+PRO weekly_means,dtgin=dtgin,ch4in=ch4in,ch4week=ch4week,dtgweek=dtgweek,$
+                 numweek=numweek,nweek=nweek
+
+  ;;***********************************************
+  ;; calculate weekly means from daily means  
+  ;; final resulting number of analysis
+  ;; points/yr are 12 months * 4 weekly means = 48
+  ;; and assign dates to these means
+
+  ;; number of weeks per year (note that here a week can be longer than 7 days)
+  nweekly = 12L*4L
+
+  ;; unique months
+  mm  = STRMID(dtgin,4,2)
+  u   = uniq(mm)
+  umm = mm[u]
+  nmonths = n_elements(umm)
+  
+  yyyy = STRMID(dtgin[0],0,4)   ; all data should be from same year
+  nyyyy = STRING(fix(yyyy)+1,format='(i4)')
+  yrdays = round(dtg2gvtime(nyyyy+'0101')-dtg2gvtime(yyyy+'0101'))
+  days = [31,28,31,30,31,30,31,31,30,31,30,31]
+  IF yrdays EQ 366 THEN days[1] = 29
+
+  ;; calculate weekly means from daily means
+  ch4week = DblArr(nweekly)
+  dtgweek = StrArr(nweekly)
+  numweek = IntArr(nweekly)
+  nweek   = 0L
+  k       = 0L                  ; data counter
+
+  ;; continuous times
+  gvtime = dtg2gvtime(dtgin)
+ 
+  FOR im = 0,nmonths-1 DO BEGIN     
+     ;; index of all points belonging to this week
+     index = WHERE(mm EQ umm[im],cnt)
+     ntage = days[fix(umm[im])-1]
+
+     ;; start and end days of each "week"
+     CASE ntage OF
+        31: BEGIN
+           wmin = ['01','09','17','25'] & wmax = ['08','16','24','31'] & dates = ['04','12','20','28']
+        END
+        30: BEGIN
+           wmin = ['01','09','17','25'] & wmax = ['08','16','24','30'] & dates = ['04','12','20','27']
+        END
+        28: BEGIN
+           wmin = ['01','08','15','23'] & wmax = ['07','14','22','28'] & dates = ['04','11','18','26']
+        END
+        29: BEGIN
+           wmin = ['01','08','15','23'] & wmax = ['07','14','22','29'] & dates = ['04','11','18','26']
+        END
+        ELSE: stop
+     ENDCASE
+
+     FOR j = 0,3 DO BEGIN
+        datmwa = yyyy+umm[im]+wmin[j]    ; beginning date week j in month
+        datmwe = yyyy+umm[im]+wmax[j]    ; end date of week j in month
+        ind = WHERE(gvtime GE dtg2gvtime(datmwa) AND gvtime LE dtg2gvtime(datmwe),cweek)
+        IF cweek GT 0L THEN BEGIN
+           ch4week[k] = mean(ch4in[ind]) 
+           nweek     += 1L
+           dtgweek[k] = yyyy+umm[im]+dates[j]+'0000'
+           numweek[k] = cweek
+           k += 1L
+        ENDIF
+     ENDFOR                     ; endloop over weeks in month im
+  ENDFOR                        ; endloop over months in year
+  
+END
+
+;----------------------------- collect data -------------------------------
+
+;+
+; NAME:
+;
+;  collect_data
+;
+; PURPOSE:
+;
+;  Read station data and process into weekly means
+;
 ; INPUTS:
 ;    sim:    simulation structure
-;    stats:  list of stations
-;    contri: contributing network
-;    type:   one of 'flask', 'cont', or 'agage'
+;    stats:  StrArr(nstat) list of stations
+;    contri: StrArr(nstat) contributing networks
+;    type:   (String) station type, one of 'flask', 'cont', or 'agage'
+;    year:   (String) year to process
 ;
 ; INPUTS AND OUTPUTS:
-;    dtgcollect   : 
-;    ch4collect   :
-;    namecollect  :
-;    latcollect   :
-;    loncollect   :
-;    numcollect   :
-;    typecollect  :
-;    a            : start index
-;    e            : end index
+;    ; Large arrays into which all data of a given year are collected
+;    dtgcollect   : StrArr(nall)
+;    ch4collect   : DblArr(nall)
+;    namecollect  : StrArr(nall)
+;    latcollect   : FltArr(nall)
+;    loncollect   : FltArr(nall)
+;    numcollect   : IntArr(nall)
+;    typecollect  : StrArr(nall)
+;    a            : start index (points to first index in collectors)
+;    e            : end index (points to last index in collectors)
 ;-
 PRO collect_data,sim,stats,contri,type,year,$
                  dtgcollect=dtgcollect,ch4collect=ch4collect,namecollect=namecollect,$
@@ -168,11 +252,6 @@ PRO collect_data,sim,stats,contri,type,year,$
 
   nstat = n_elements(stats)
   
-  nextyear = STRING(year+1,format='(i4)')
-  yrdays = round(dtg2gvtime(nextyear+'0101')-dtg2gvtime(year+'0101'))
-  days = [31,28,31,30,31,30,31,31,30,31,30,31]
-  IF yrdays EQ 366 THEN days[1] = 29
-
   ;; number of weeks per year (note that here a "week" can be more than 7 days)
   nweekly = 12L*4L
 
@@ -191,7 +270,8 @@ PRO collect_data,sim,stats,contri,type,year,$
   read_globalview_final,latglob=latglob,timeglob=timeglob,ch4glob=ch4glob
   range  = 100.                 ; invalidate values more than 100 ppb below GLOBALVIEW
 
-  nout = 0L
+  nplus = 0L
+  nminus = 0L
   ndat = 0L
   nhighf = 0L
 
@@ -203,14 +283,17 @@ PRO collect_data,sim,stats,contri,type,year,$
         'flask': BEGIN
            contribution = contri[i]
            file = file_search(basedir+station+'*.'+contribution+'*.dat')
+           typstr = 'ev'
         END
         'cont': BEGIN
            contribution = contri[i]
            file = file_search(basedir+station+'*.'+contribution+'*.dat')
+           typstr = 'cn'
         END
         'agage': BEGIN
            contribution = 'agage'
            file = file_search(basedir+station+'*.agage.*md.ev.dat')
+           typstr = 'cn'        ; treat like continuous data
         END
      END
  
@@ -218,152 +301,90 @@ PRO collect_data,sim,stats,contri,type,year,$
         ;; more than one file available, select the one with filtered data
         pos = strpos(file,'filtered')
         index = WHERE(pos NE -1,count)
-        IF count GT 0 THEN file = file[index[0]]
+        IF count GT 0 THEN file = file[index]
      ENDIF
+     file = file[0]
 
      IF file eq '' THEN BEGIN
         print,'no data for station ',station,' for year ',year
         GOTO,nextstat
      ENDIF
 
-     read_wdcgg_data_single_final,file=file,station=station,contri=contribution,lat,lon,cal,$
-                                  jahr=jahr,month=month,day=day,ch4=ch4,flag=flag,ndata=ndata,$
-                                  characteristics=characteristics,brw=sim.brw,special=sim.special,$
-                                  statfilt=sim.statfilt,gvlat=latglob,gvtime=timeglob,gvch4=ch4glob
-     
-     jahrin = IntArr(ndata) & monin  = IntArr(ndata) & dayin  = IntArr(ndata) & ch4in = DblArr(ndata)
-     jahrin[*] = jahr[0:ndata-1]
-     monin[*]  = month[0:ndata-1]
-     dayin[*]  = day[0:ndata-1]
-     ch4in[*]  = ch4[0:ndata-1]
-     
-     indcheck = WHERE(finite(ch4in) eq 1,ccheck)
-     ndat   += ccheck    
-     IF ccheck gt 0L THEN BEGIN        
-        miin  = mean(ch4in[indcheck])
-        ober  = miin + 3.*stddev(ch4in[indcheck])
-        indo  = WHERE(ch4in[indcheck] gt ober,c,complement=include)
-        nout  += c
-        
-        ch4weiter  = ch4in[indcheck[include]]
-        dayweiter  = dayin[indcheck[include]]
-        monweiter  = monin[indcheck[include]]
-        jahrweiter = jahrin[indcheck[include]]
+     print,'processing station ',station,' of type ',type,' for year ',year
+     read_wdcgg_brd,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
+                    gvtimes=gvtimes,values=ch4,flag=flag,ndata=ndata,$
+                    characteristics=characteristics,brw=sim.brw,special=sim.special,$
+                    statfilt=sim.statfilt
 
-        ch4weiter  = ch4in[indcheck]
-        dayweiter  = dayin[indcheck]
-        monweiter  = monin[indcheck]
-        jahrweiter = jahrin[indcheck]
-     ENDIF ELSE BEGIN
-        stop
-     ENDELSE   
+     dtg = gvtime2dtg(gvtimes)  ; date/times in format YYYYMMDDhhmm
+
+     ;;************************************************
+     ;; limit to valid data in given year
+     ;;************************************************
+     index = WHERE(finite(ch4) AND STRMID(dtg,0,4) EQ year,cnt)
+     IF cnt EQ 0 THEN GOTO,nextstat
+
+     ndat += cnt
+     ch4 = ch4[index]
+     gvtimes = gvtimes[index]
+     dtg = dtg[index]
+
+     ;;************************************************
+     ;;* filter out suspiciously high and low CH4 data
+     ;;************************************************
+     ;; high values more than 3 sigma higher than mean
+     nstdev = 3.0               ; multiples of 1sigma to filter out
+     miin = mean(ch4)
+     ober = miin + nstdev*stddev(ch4)
+     indo  = WHERE(ch4 gt ober,cplus,complement=include)
+     IF cplus GT 0 THEN print,'Data at ', characteristics[0], ': ', cplus, ' suspiciously high measurements'
+     nplus += cplus
+
+     ch4 = ch4[include]
+     gvtimes = gvtimes[include]
+     dtg = dtg[include]
      
-     determine_dtg,year,jahrweiter,monweiter,dayweiter,dtg=dtg
+     ;; low values lower than GLOBALVIEW CH4 at this latitude - range
+     indlat = WHERE(abs(latglob-lat) EQ min(abs(latglob-lat)),cch)
+
+     cminus = 0
+     ;; loop over data and compare against GLOBALVIEW for given YYYYMM
+     FOR k=0,n_elements(ch4)-1 DO BEGIN
+        indt = WHERE(STRMID(dtg[k],0,6) eq timeglob,ct)
+        IF ct EQ 0 THEN stop
+        IF ch4[k] LT ch4glob[indt[0],indlat[0]]-range THEN BEGIN
+           ch4[k]=!values.f_nan
+           cminus += 1
+        ENDIF
+     ENDFOR
+     nminus += cminus
+
+     IF cminus gt 0 THEN print, 'Data at ', characteristics[0], ': ', cminus, ' suspiciously low measurements'
+     index = WHERE(finite(ch4),cnt)
+     IF cnt EQ 0 THEN GOTO,nextstat
+
+     ch4 = ch4[index]
+     gvtimes = gvtimes[index]
+     dtg = dtg[index]
+
+     ;; calculate daily means
+     ;daily_means,dtgdat=dtg,ch4=ch4,out=out,timestamp=timestamp,ndays=ndays
+     daily_means,dtgin=dtg,ch4in=ch4,ch4out=ch4daily,dtgout=dtgdaily,ndays=ndays
+ 
+     ;; calculate weekly means
+     weekly_means,dtgin=dtgdaily,ch4in=ch4daily,ch4week=ch4week,dtgweek=dtgweek,$
+                  numweek=numweek,nweek=nweek
+
+     e        += nweek
+     ch4collect[a:e-1]  = ch4week[0:nweek-1]
+     dtgcollect[a:e-1]  = dtgweek[0:nweek-1]
+     namecollect[a:e-1] = station
+     latcollect[a:e-1]  = lat
+     loncollect[a:e-1]  = lon
+     numcollect[a:e-1]  = numweek[0:nweek-1]
+     typecollect[a:e-1] = typstr
+     a        += nweek
      
-     indy     = WHERE(STRCOMPRESS(string(jahrweiter),/REM) eq year,cy)
-     
-     ;; **************************************************
-     ;; only continue if data available in selected year
-     IF cy gt 0L THEN BEGIN
-        
-        index = WHERE(finite(ch4weiter[indy]) eq 1,cex)
-        
-        IF cex gt 0L THEN BEGIN
-           dtgev = StrArr(cex)
-           ch4ev = DblArr(cex)
-           dtgev[*] = dtg[index]
-           ch4ev[*] = ch4weiter[indy[index]]
-           
-           ;; **************************************************   
-           ;; check if there are suspicious values
-           indch  = WHERE(abs(latglob-lat) eq min(abs(latglob-lat)),cch)
-           date   = STRMID(dtgev,0,6) ; year and month information to compare with GLOBALVIEW monthly data
-           cminus = 0
-           inderr = IntArr(cy)  & inderr[*] = 0
-           FOR k=0,cex-1 DO BEGIN
-              indt   = WHERE(date[k] eq timeglob,ct)
-              IF ch4ev[k] lt ch4glob[indt[0],indch[0]]-range THEN BEGIN
-                 cminus += 1
-                 inderr[k] = 1
-              ENDIF
-           ENDFOR
-           IF cminus gt 0 THEN print,'At station ',stats[i],' of type',type,': ',cminus,' suspicious measurements'
-           cvalid   = cy-cminus
-           dtgvalid = StrArr(cvalid)
-           ch4valid = DblArr(cvalid)
-           indval   = WHERE(inderr eq 0,cval)
-           IF cval gt 0L THEN BEGIN
-              dtgvalid[*] = dtgev[indval]
-              ch4valid[*] = ch4ev[indval]
-           ENDIF
-           
-           ;; calculate daily means
-           daily_means,dtgdat=dtgev,ch4=ch4ev,out=out,timestamp=timestamp,obstime=obstime,ndays=ndays
-           
-           ;;***********************************************
-           ;; calculate weekly means from daily means  
-           ;; final resulting number of analysis
-           ;; points/yr are 12 months * 4 weekly means = 48
-           ;; and assign dates to these means
-           
-           mm  = STRMID(timestamp,4,2)
-           s   = sort(dtg2gvtime(mm))
-           smm = STRMID(timestamp(s),4,2)
-           u   = uniq(smm)
-           umm = smm(u)
-           nmonths = n_elements(umm)
-           
-           ;; calculate weekly means from daily means
-           ch4weekev = DblArr(nweekly)
-           dtgweekev = StrArr(nweekly)
-           numweekev = IntArr(nweekly)
-           nweekev   = 0
-           k         = 0        ; data counter
-           FOR im = 0,nmonths-1 DO BEGIN
-              index = WHERE(mm EQ umm[im],cnt)
-              ntage = days[fix(umm[im])-1]
-              CASE ntage OF
-                 31: BEGIN
-                    wmin = ['01','09','17','25'] & wmax = ['08','16','24','31'] & dates = ['04','12','20','28']
-                 END
-                 30: BEGIN
-                    wmin = ['01','09','17','25'] & wmax = ['08','16','24','30'] & dates = ['04','12','20','27']
-                 END
-                 28: BEGIN
-                    wmin = ['01','08','15','23'] & wmax = ['07','14','22','28'] & dates = ['04','11','18','26']
-                 END
-                 29: BEGIN
-                    wmin = ['01','08','15','23'] & wmax = ['07','14','22','29'] & dates = ['04','11','18','26']
-                 END
-                 ELSE: stop
-              ENDCASE        
-              FOR j = 0,3 DO BEGIN
-                 datmwa = STRCOMPRESS(string(year),/REM)+umm[im]+wmin[j]    ; beginning date week j in month
-                 datmwe = STRCOMPRESS(string(year),/REM)+umm[im]+wmax[j]    ; end date of week j in month
-                 ind = WHERE(dtg2gvtime(timestamp) ge dtg2gvtime(datmwa) and $
-                             dtg2gvtime(timestamp) le dtg2gvtime(datmwe),cweek)
-                 IF cweek gt 0L THEN BEGIN
-                    ch4weekev[k] = mean(out[ind],/NAN) 
-                    nweekev     += 1
-                    dtgweekev[k] = STRCOMPRESS(string(year),/REM)+umm[im]+dates[j]+'0000'
-                    numweekev[k] = fix(cweek)      
-                    k += 1
-                 ENDIF
-              ENDFOR            ; endloop over weeks in month im
-           ENDFOR               ; endloop over months in year
-           
-           e        += nweekev
-           ch4collect[a:e-1]  = ch4weekev[0:nweekev-1]
-           dtgcollect[a:e-1]  = dtgweekev[0:nweekev-1]
-           namecollect[a:e-1] = stats[i]
-           latcollect[a:e-1]  = lat
-           loncollect[a:e-1]  = lon
-           numcollect[a:e-1]  = numweekev[0:nweekev-1]
-           typecollect[a:e-1] = 'ev'
-           a        += nweekev
-           
-        ENDIF                   ; end if data in year are not NaN values       
-     ENDIF                      ; end if data are available in selected year
      nextstat:
   ENDFOR                        ; end loop over dat data
   
@@ -371,10 +392,12 @@ PRO collect_data,sim,stats,contri,type,year,$
   fileober = sim.outdir+'/log/percentage_data_dismissed_upperthreshold_'+year+'_'+type+'.txt'
   openw,lun1,fileober,/get_lun
 
-  print, 'Number of filtered out high data: ', nout, ', = ', float(nout)/float(ndat)*100., ' % of raw data'
-  printf,lun1,year,':',string(nout,format='(i6)'),' invalid points of ',string(ndat,format='(i6)'),$
-         ' (',strcompress(float(nout)/float(ndat)*100.,/rem),'%)'   
-
+  nout = nplus+nminus
+  print, 'Number of filtered out data: ', nout, ', = ', float(nout)/float(ndat)*100., ' % of raw data'
+  printf,lun1,year,':',$
+         string(nminus,format='(i6)'),' low and ',$
+         string(nplus,format='(i6)'),' high points of ',string(ndat,format='(i6)'),' removed',$
+         ' (',strcompress(float(nout)/float(ndat)*100.,/rem),'%)'
   free_lun,lun1
 
 END
@@ -398,14 +421,17 @@ PRO inv_obsvector_mon_weekly_brd,sim
   years = syear + indgen(eyear-syear+1)
   nyear = n_elements(years)
 
+  ;; number of weeks per year (a week can be more than 7 days)
+  nweekly = 12L*4L
+  
+  ;; total number of weekly data points to hold for a given year
+  ;; (origin of formula unclear)
+  nall    = (2L*nweekly+366L)*100L
+
   FOR yy = 0,nyear-1 DO BEGIN
      year = years[yy]
 
-     ;; number of weekly data (AGAGE and continuous)
-     nweekly = 12L*4L
-
-     nall    = (2L*nweekly+366L)*100L
-
+     ;; (re-)initialize collector arrays
      dtgcollect  = StrArr(nall)
      ch4collect  = DblArr(nall)
      namecollect = StrArr(nall)
@@ -486,12 +512,12 @@ PRO inv_obsvector_mon_weekly_brd,sim
            ch4mon[*]  = sch4[indm]  & nummon[*] = snum[indm] 
            typemon[*] = stype[indm]
 
-           IF keyword_set(flask) THEN BEGIN
+           IF keyword_set(sim.flask) THEN BEGIN
               fileout = dirout+'z_allweekly_flask_'+sn+'_'+year+umm[i]+'.dat'
            ENDIF ELSE BEGIN
               fileout = dirout+'z_allweekly_'+sn+'_'+year+umm[i]+'.dat'             
-              IF keyword_set(special) THEN fileout = dirout+'z_allweekly_special_'+sn+'_'+year+umm[i]+'.dat'
-              IF keyword_set(brw) THEN     fileout = dirout+'z_allweekly_brwnobg_'+sn+'_'+year+umm[i]+'.dat' 
+              IF keyword_set(sim.special) THEN fileout = dirout+'z_allweekly_special_'+sn+'_'+year+umm[i]+'.dat'
+              IF keyword_set(sim.brw) THEN     fileout = dirout+'z_allweekly_brwnobg_'+sn+'_'+year+umm[i]+'.dat' 
            ENDELSE
            print, fileout
            openw,lun,fileout,/get_lun

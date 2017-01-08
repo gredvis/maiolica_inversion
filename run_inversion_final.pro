@@ -46,7 +46,9 @@ PRO run_inversion_final
 
   ;; basic simulation configuration and directory settings
   run = 'NEW_DLR'               ; or '22.4'
-  sim = inv_configurations_brd(run=run,ok=ok)
+  sconfig = 'flask'             ; options are 'flask', 'all', 'special'
+
+  sim = inv_configurations_brd(run=run,sconfig=sconfig,ok=ok)
   IF NOT ok THEN RETURN
   
   ;; activate steps

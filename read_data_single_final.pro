@@ -24,7 +24,8 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;
+;  basedir               (string) : read files from this directory instead of 
+;                                   default directory sim.obsdir
 ;
 ; OUTPUTS:
 ;
@@ -32,7 +33,7 @@
 ;  dtgobs          (strarr(nobs)) : the corresponding dates/times
 ;  lonobs          (fltarr(nobs)) : the corresponding longitudes
 ;  latobs          (fltarr(nobs)) : the corresponding latitudes
-;  nambeobs        (strarr(nobs)) : the corresponding station names
+;  nameobs         (strarr(nobs)) : the corresponding station names
 ;
 ; COMMON BLOCKS:
 ;
@@ -62,34 +63,35 @@
 ;
 ;   March 2012: first implementation
 ;
+;   Dominik Brunner, 8 Jan 2017: adjusted to make use of simulation structure sim
 ;-
 
 PRO read_data_single_final,sim=sim,yyyymm=yyyymm,ch4obs=ch4,dtgobs=dtg,$
-                     lonobs=lon,latobs=lat,nameobs=name,nobs=nobs,weekly=weekly,$
-                     stats=stats,flask=flask,brw=brw,nobg=nobg,special=special
+                           lonobs=lon,latobs=lat,nameobs=name,nobs=nobs,$
+                           weekly=weekly,basedir=basedir
 
-  sn = STRCOMPRESS(string(fix(n_elements(stats))),/REM)+'stats'
+  IF n_elements(basedir) EQ 0 THEN basedir = sim.obsdir
+
+  sn = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'  
+  flask = sim.sconfig EQ 'flask'
+
 ;  IF keyword_set(special) THEN sn = '88stats'   
 ;  IF keyword_set(brw) THEN sn = '91stats'
 ;  IF keyword_set(flask) THEN sn = '69stats'
-;  IF keyword_set(flask) THEN sn = '11stats' ;FLO MAYBE TO REMOVE
-;IF keyword_set(flask) THEN sn = '10stats'
 
   ;*******************************
   ;* read data
   ;*******************************     
   IF KEYWORD_SET(weekly) THEN BEGIN
     IF keyword_set(flask) THEN BEGIN
-      infile = sim.obsdir+'z_allweekly_flask_'+sn+'_'+yyyymm+'.dat'    
-      IF keyword_set(nobg) THEN infile = sim.obsdir+'z_allweekly_flask_nobg_'+sn+'_'+yyyymm+'.dat'     
+      infile = basedir+'z_allweekly_flask_'+sn+'_'+yyyymm+'.dat'    
     ENDIF ELSE BEGIN
-      infile = sim.obsdir+'z_allweekly_'+sn+'_'+yyyymm+'.dat'    
-      IF keyword_set(brw)  THEN    infile = sim.obsdir+'z_allweekly_'+sn+'_'+yyyymm+'.dat'        
-      IF keyword_set(nobg) THEN    infile = sim.obsdir+'z_allweekly_nobg_'+sn+'_'+yyyymm+'.dat'        
-      IF keyword_set(special) THEN infile = sim.obsdir+'z_allweekly_special_'+sn+'_'+yyyymm+'.dat' 
+      infile = basedir+'z_allweekly_'+sn+'_'+yyyymm+'.dat'    
+      IF keyword_set(sim.brw)  THEN    infile = basedir+'z_allweekly_'+sn+'_'+yyyymm+'.dat'        
+      IF keyword_set(sim.special) THEN infile = basedir+'z_allweekly_special_'+sn+'_'+yyyymm+'.dat' 
     ENDELSE 
   ENDIF ELSE BEGIN
-    infile   = sim.obsdir+'z_'+yyyymm+'.dat'
+    infile   = basedir+'z_'+yyyymm+'.dat'
   ENDELSE
   nobs   = FILE_LINES(infile)
 

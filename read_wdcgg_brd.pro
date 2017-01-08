@@ -8,8 +8,7 @@
 ; CALLING SEQUENCE:
 ;     read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
 ;                     values=values,flag=flag,ndata=ndata,characteristics=characteristics,$
-;                     brw=brw,special=special,statfilt=statfilt,$
-;                     gvlat=gvlat,gvyyyymm=gvyyyymm,gvch4=gvch4
+;                     brw=brw,special=special,statfilt=statfilt
 ;
 ; KEYWORD INPUTS:
 ;     file       (STRING) : path of WDCGG file
@@ -19,9 +18,6 @@
 ;                           statfilt for non-background values
 ;     statfilt            : list of stations to which more stringent filtering is applied
 ;                           (there seems to be some redundancy with /brw)
-;     gvch4  FltArr(nlat,ntime): Reference CH4 values from global view
-;     gvlat  FltArr(nlat) : latitudes of GlobalView product
-;     gvyyyymm    FltArr(ntime): times of GlobalView product
 ;     
 ; OUTPUTS:
 ;     lat           (FLOAT) : station latitude
@@ -43,8 +39,7 @@
 ;-
 PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
                    values=values,flag=flag,ndata=ndata,characteristics=characteristics,$
-                   brw=brw,special=special,statfilt=statfilt,$
-                   gvlat=gvlat,gvyyyymm=gvyyyymm,gvch4=gvch4
+                   brw=brw,special=special,statfilt=statfilt
   
   datei = file_search(file,count=count)
   IF count EQ 0 THEN BEGIN
@@ -84,9 +79,9 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
 
   ; USA stands for USA standard scale (NIST)
   calstandard = ['NOAA04','NOAA-04','WMO','NOAA','KRISS',   'USA','Tohoku','NOAA/CMDL','NIES','NONE',$
-                 'indirect', 'MRI', 'NOAA2004']
+                 'indirect', 'MRI', 'NOAA2004', '1999~2006:']
   convfactor  = [      1.,       1.,   1.,1.0124,  1.013,  0.9973, 1.0003,     1.0124,0.9973,    1., $
-                       1.,0.9973,    1.]
+                       1.,0.9973,    1.,   1.013]
   
   provider    = ['csiro','ec','jma','mgo','noaa','cmdl','rse','ubag','lsce']
   ; AEMET, EMPA, ENEA, IPEN, ISAC, KMA,
@@ -220,7 +215,11 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
 
   readf,lun,sline               ; line C25, calibration standard
   result  = STRSPLIT(sline,/EXTRACT)
-  cal     = result[3]           ; check calibration standard
+  IF n_elements(result) LT 4 THEN BEGIN
+     IF station EQ 'tkb' THEN cal='MRI' ELSE stop
+  ENDIF ELSE BEGIN
+     cal     = result[3]                ; check calibration standard
+  ENDELSE
   FOR k=25,nheader-1 DO readf,lun,sline ; overread rest of header lines
   
   ;; *******************************************
