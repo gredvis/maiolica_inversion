@@ -2,7 +2,8 @@ PRO compare_brd_arf,type = type,_extra=e
 
 type = 'obs'
 run = 'NEW_DLR'               ; or '22.4'
-sim = inv_configurations_brd(run=run,ok=ok)
+sconfig='flask'
+sim = inv_configurations_brd(run=run,sconfig=sconfig,ok=ok)
 
 IF type EQ 'obs' THEN BEGIN
    ;; compare observation data processed by myself with those of Florian
@@ -10,7 +11,7 @@ IF type EQ 'obs' THEN BEGIN
    brdobsdir = sim.obsdir
    arfobsdir = '/nas/arf/INVERSION/OBSINPUT/FINAL/'
 
-   stats = 'z_allweekly_91stats'
+   stats = 'z_allweekly_flask_69stats'
    weekly = 1
 
    ;; load all weekly observations
@@ -67,10 +68,8 @@ IF type EQ 'obs' THEN BEGIN
          plot_tseries,dtg2gvtime(arfdtg),arfch4,psym=plotsymbol(1),color=24,/over
 
       ENDIF
-      
-   ENDFOR
 
-   stop
+   ENDFOR
 
 ENDIF
 

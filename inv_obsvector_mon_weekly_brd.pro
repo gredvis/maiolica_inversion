@@ -5,23 +5,25 @@
 ;
 ; PURPOSE:
 ;
-;   Produce weekly observation data tables for a given inversion simulation.
+;   Produce monthly files with weekly averaged observation data for a 
+;   given inversion simulation. Note that a "week" is not necessarily
+;   7 days, but each month of the year is split into 4 "weeks".
 ;
-;   The routine loops over all years of the simulations, reads in the
+;   The routine loops over all years of the simulation, reads in the
 ;   observation data corresponding to the specified list of stations, 
 ;   and writes out weekly averages into monthly files.
 ;
 ; CATEGORY:
 ;
-;   inverse modelling URMEL CTRL run. Preparation for inversion.
+;   inverse modelling, URMEL, MAIOLICA-2, preparation for inversion
 ;
 ; CALLING SEQUENCE:
 ;
-;  inv_obsvector_mon_weekly_brd,sim
+;   inv_obsvector_mon_weekly_brd,sim
 ;
 ; INPUTS:
 ;
-;       sim:  The simulation structure (see inv_configuration_brd.pro)
+;   sim:  The simulation structure (see inv_configuration_brd.pro)
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -30,17 +32,17 @@
 ;
 ; OUTPUTS:
 ;
-;       flask daily and weekly mean station data (continuous) in predefined order
-;       output to /nas/spc134/URMEL/INVERSION/OBSINPUT
-;       monthly files, filename: z_yyyymm.dat
-;             
+;    None.
+;    The program writes out monthly text files with names 'z_allweekly_NNstats_yyyymm.dat'
+;    into the directory sim.obdir
+;
 ; COMMON BLOCKS:
 ;
-;        none
+;    none
 ;
 ; SIDE EFFECTS:
 ;
-;        none
+;    none
 ;
 ; RESTRICTIONS:
 ;
@@ -51,8 +53,7 @@
 ;        Called by routine collect_data
 ;
 ;   weekly_means:
-;        compute weekly means for one year of daily mean observation data
-;        Called by routine collect_data after call to daily_means
+;        compute weekly means after computing the daily_means
 ;
 ;   collect_data
 ;        Read station data and process into weekly means
@@ -389,7 +390,7 @@ PRO collect_data,sim,stats,contri,type,year,$
   ENDFOR                        ; end loop over dat data
   
   ;; store percentage of data invalidated to a log-file
-  fileober = sim.outdir+'/log/percentage_data_dismissed_upperthreshold_'+year+'_'+type+'.txt'
+  fileober = sim.basedir+'/log/percentage_data_dismissed_upperthreshold_'+year+'_'+type+'.txt'
   openw,lun1,fileober,/get_lun
 
   nout = nplus+nminus
@@ -505,7 +506,8 @@ PRO inv_obsvector_mon_weekly_brd,sim
         indm = WHERE(smon eq umm[i],cm)
         print, umm[i], ' ', cm
         IF cm gt 0L THEN BEGIN
-           latmon = FltArr(cm) & lonmon = FltArr(cm) & namemon = StrArr(cm) & ch4mon = DblArr(cm) & dtgmon = StrArr(cm)
+           latmon = FltArr(cm) & lonmon = FltArr(cm) & namemon = StrArr(cm)
+           ch4mon = DblArr(cm) & dtgmon = StrArr(cm)
            nummon = IntArr(cm) & typemon = StrArr(cm)
            latmon[*]  = slon[indm]  & lonmon[*] = slat[indm]
            namemon[*] = sname[indm] & dtgmon[*] = sdtg[indm]

@@ -90,6 +90,8 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
                        'wkt',   'wis',   'key',   'ask',   'lln',   'kum',   'cri',   'gmi',   'abp',   'chr',$
                        'mkn',   'sey',   'asc',   'cfa',   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',$
                        'crz',   'mqa',   'tdf',   'psa',   'cya',   'syo',   'hba']
+        nstats = n_elements(stats)
+        ufact  = FltArr(nstats) + 1.
      END
      'flask_DLR2': BEGIN        ; NOAA flask network but without smo,ice,sis,amt and LPO,BSC,WKT removed
                                 ; probably the one finally used for publication!!
@@ -101,8 +103,9 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
                        'wis',   'key',   'ask',   'lln',   'kum',   'cri',   'gmi',   'abp',   'chr',$
                        'mkn',   'sey',   'asc',   'cfa',   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',$
                        'crz',   'mqa',   'tdf',   'psa',   'cya',   'syo',   'hba']
+        nstats = n_elements(stats)
+        ufact  = FltArr(nstats) + 1.
      END
-
      'all': BEGIN               ; all 91 stations including data from 34 continuous stations, until 'cgo'
 
         stats  =   [   'alt',   'brw',   'llb',   'cdl',   'zgt',   'etl',   'kmw',   'mhd',   'ngl',$

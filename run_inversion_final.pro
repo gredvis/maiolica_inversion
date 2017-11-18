@@ -42,19 +42,22 @@
 ;          inv_configuration.pro and inv_station_settings.
 ;-
 
+@inv_tools_brd.pro
+
 PRO run_inversion_final
 
   ;; basic simulation configuration and directory settings
   run = 'NEW_DLR'               ; or '22.4'
-  sconfig = 'flask'             ; options are 'flask', 'all', 'special'
+  ;;sconfig = 'flask'             ; options are 'flask', 'all', 'special'
+  sconfig = 'flask_DLR2'        ; options are 'flask', 'all', 'special', 'flask_DLR2'
 
   sim = inv_configurations_brd(run=run,sconfig=sconfig,ok=ok)
   IF NOT ok THEN RETURN
   
   ;; activate steps
-  step1 = 1   ; step1: compute weekly mean observational data
-  step2 = 0   ; step2: compute weekly mean model data 
-  step3 = 0   ; step3: compute model-data mismatch first time
+  step1 = 0   ; step1: read in original obs data and write to monthly files of weekly means
+  step2 = 0   ; step2: read in model receptor output and write to monthly files of weekly means
+  step3 = 1   ; step3: compute model-data mismatch first time
   step4 = 0   ; step4: run preliminary inversion to compute aposteriori model-data mismatch
   step5 = 0   ; step5: compute model-data mismatch second time using aposteriori model data
   step6 = 0   ; step6: run final inversion
@@ -68,26 +71,24 @@ PRO run_inversion_final
   ; start program chain:
   ;************************************************************************
 
-  ; 1. compute weekly mean observational data and put out into monthly files
+  ;; 1. compute weekly mean observation data and write to monthly files
   IF keyword_set(step1) THEN BEGIN
      inv_obsvector_mon_weekly_brd,sim
    ENDIF ELSE BEGIN
      print, 'Skipped step1: computing weekly mean observational data'
   ENDELSE
 
-  stop
-
-  ; 2. compute weekly mean model data and put out into monthly files
+  ;; 2. compute weekly mean model data and write to monthly files
   IF keyword_set(step2) THEN BEGIN
-     read_weekly_model_data_all_final,sim=sim,stats=stats,flask=flask,nobg=nobg,special=special    
+     inv_modvector_mon_weekly_brd,sim,/plot
   ENDIF ELSE BEGIN
      print, 'Skipped step2: computing weekly mean model data'  
   ENDELSE
-  
+
+  ;; 3. compute observational errors
   IF keyword_set(step3) THEN BEGIN
      print, '3. Run inv_error_diagonal_weekly'
-     ;; 3. compute observational errors
-     inv_error_diagonal_weekly_final,sim=sim,stats=stats,flask=flask,ufact=ufact,nobg=nobg,special=special
+     inv_error_diagonal_weekly_brd,sim
   ENDIF ELSE BEGIN
      print, 'Skipped step3: computing model-data mismatch first time'    
   ENDELSE

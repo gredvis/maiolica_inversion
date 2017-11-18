@@ -76,6 +76,7 @@
 ;
 ;   DB, 04 Jan 2017:  first implementation
 ;-
+@inv_tools_brd
 FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
 
   ;***********************************************
@@ -86,13 +87,16 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
 
   name = 'final_sim01'                                   ; name of inversion run
   syyyymm = '198902' & eyyyymm = '201212'                ; start and end date of inversion
-  wdcggdir = '/nas/input/WDCGG/'                         ; directory of original CH4 data
-  wdcggdir = '/remote7/arfeuille/DATA/GAW_WDCGG/'
-  ;;obsdir = '/nas/arf/INVERSION/OBSINPUT/FINAL/'          ; directory of pre-processed observation data
-  obsdir = '/remote7/arfeuille/INVERSION/OBSINPUT/FINAL/'; directory of pre-processed observation data
-  modeldir = '/nas/arf/output/'                          ; base directory of FLEXPART model output
-  outdir = '/remote7/arfeuille/INVERSION/FINAL/'         ; output directory for inversion results
-  hdir = '/nas/arf/INVERSION/SENSITIVITIES/FINAL/'       ; directory to store weekly sensitivities per station
+
+  basedir = '/project/arf/nas/INVERSION/'      ; base directory for intermediate and final files
+  obsdir = basedir+'OBSINPUT/'                           ; directory of pre-processed observation data
+  outdir = basedir+'RESULTS/'                            ; output directory for inversion results
+  modeldir = '/project/arf/nas/output/'                  ; base directory of FLEXPART model output
+  ;;hdir = '/project/arf/nas/arf/INVERSION/SENSITIVITIES/FINAL/'     ; directory to store weekly sensitivities per station
+  hdir = basedir+'SENSITIVITIES'                         ; directory to store weekly sensitivities per station
+  ;;wdcggdir = '/nas/input/WDCGG/'                       ; directory of original CH4 data
+  wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
+
   ntrace = 48                                            ; number of tracers
   nage = 5                                               ; number of age classes
   fcorr_glob   = 0                                       ; global correction factor (1) or factors per category (0) 
@@ -101,11 +105,11 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
   nobg = 0                                               ; use only non-background values (always set to 0!)
 
   ;; station configuration
-  IF n_elements(sconfig) EQ 0 THEN sconfig = 'flask' ; options are 'flask', 'all', 'special'
+  IF n_elements(sconfig) EQ 0 THEN sconfig = 'flask' ; options are 'flask', 'all', 'special', 'flask_DLR2'
 
   ;; flags for certain station configurations
-  flask   = sconfig EQ 'flask'
-  special = sconfig EQ 'special'
+  flask   = strpos(sconfig,'flask') NE -1
+  special = strpos(sconfig,'special') NE -1
 
   ; w/o BKT station
   bkt     = 0
@@ -312,6 +316,9 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
   inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
   IF NOT ok THEN RETURN,-1
 
+  ;; get optimal FLEXPART receptor output levels for these sites
+  station_rcpt_levs,stats,levs=levs
+
   sn = STRCOMPRESS(n_elements(stats),/REM)              
   print, 'Run inversion with ', sn, ' stations'
 
@@ -350,17 +357,18 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
 
   sim = {name:name,$
          sconfig:sconfig,$
-         wdcggdir:wdcggdir,$
+         basedir:basedir,$
          obsdir:obsdir,$
-         modeldir:modeldir,$
          outdir:outdir,$
+         modeldir:modeldir,$
+         wdcggdir:wdcggdir,$
          hdir:hdir,$
          syyyymm:syyyymm,eyyyymm:eyyyymm,$
          scaleq:scaleq,$
          ntrace:ntrace,nage:nage,$
          weekly:weekly,$
          keeppos:keeppos,$
-         stats:stats,ufact:ufact,$
+         stats:stats,ufact:ufact,stat_levs:levs,$
          flask:flask,$
          special:special,$
          bkt:bkt,$
