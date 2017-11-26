@@ -88,12 +88,14 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
   name = 'final_sim01'                                   ; name of inversion run
   syyyymm = '198902' & eyyyymm = '201212'                ; start and end date of inversion
 
-  basedir = '/project/arf/nas/INVERSION/'      ; base directory for intermediate and final files
+  basedir = '/project/arf/nas/INVERSION/'                ; base directory for intermediate and final files
   obsdir = basedir+'OBSINPUT/'                           ; directory of pre-processed observation data
+  moddir = basedir+'MODINPUT/'                           ; directory of pre-processed model data
+  errcovdir = basedir+'ERRORCOVARIANCE/'                 ; directory of station errors (diff model - station)
   outdir = basedir+'RESULTS/'                            ; output directory for inversion results
   modeldir = '/project/arf/nas/output/'                  ; base directory of FLEXPART model output
   ;;hdir = '/project/arf/nas/arf/INVERSION/SENSITIVITIES/FINAL/'     ; directory to store weekly sensitivities per station
-  hdir = basedir+'SENSITIVITIES'                         ; directory to store weekly sensitivities per station
+  hdir = basedir+'SENSITIVITIES/'                        ; directory to store weekly sensitivities per station
   ;;wdcggdir = '/nas/input/WDCGG/'                       ; directory of original CH4 data
   wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
 
@@ -359,6 +361,8 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
          sconfig:sconfig,$
          basedir:basedir,$
          obsdir:obsdir,$
+         moddir:moddir,$
+         errcovdir:errcovdir,$
          outdir:outdir,$
          modeldir:modeldir,$
          wdcggdir:wdcggdir,$

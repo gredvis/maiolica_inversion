@@ -5,7 +5,7 @@
 ;
 ; PURPOSE:
 ;
-;  read CH4 measurement data for a given month yyyymm which have been
+;  Read CH4 measurement data for a given month yyyymm which have been
 ;  processed with inv_obsvector_mon_weekly.pro from individual station
 ;  data into monthly files with weekly averages
 ;

@@ -13,21 +13,22 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  read_weekly_model_data
+;      inv_modvector_mon_weekly_brd,sim,plot=plot
+;
 ;
 ; INPUTS:
 ;
-;       from: start year of inversion
-;       to: end year of inversion
-;
-; OPTIONAL INPUTS:
+;       sim   (structure) : the simulation structure
 ;
 ;
 ; KEYWORD PARAMETERS:
 ;
+;       /plot             : set keyword to plot comparisons of model and observation
+;                           time series
+;
 ; OUTPUTS:
 ;
-;  weekly model data for years of inversion as monthly files
+;        weekly model data for years of inversion as monthly files
 ;             
 ; COMMON BLOCKS:
 ;
@@ -157,15 +158,15 @@ PRO inv_modvector_mon_weekly_brd,sim,plot=plot
     FOR im=0,nmonths-1 DO BEGIN
 
        IF keyword_set(sim.flask) THEN BEGIN  
-          monfile = sim.basedir+'MODINPUT/m_allweekly_flask_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'        
+          monfile = sim.moddir+'m_allweekly_flask_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'        
           IF keyword_set(sim.nobg) THEN $
-             monfile  = sim.basedir+'MODINPUT/m_allweekly_flask_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'          
+             monfile  = sim.moddir+'m_allweekly_flask_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'          
        ENDIF ELSE BEGIN
-          monfile = sim.basedir+'MODINPUT/m_allweekly_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
+          monfile = sim.moddir+'m_allweekly_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
           IF keyword_set(sim.nobg) THEN $
-             monfile = sim.basedir+'MODINPUT/m_allweekly_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
+             monfile = sim.moddir+'m_allweekly_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
           IF keyword_set(sim.special) THEN $
-             monfile = sim.basedir+'MODINPUT/m_allweekly_special_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
+             monfile = sim.moddir+'m_allweekly_special_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
        ENDELSE
        openw,lun,monfile,/get_lun
        WHILE STRMID(ch4mod[ipos].dtg,4,2) EQ mon[im] DO BEGIN

@@ -5,16 +5,21 @@
 ;
 ; PURPOSE:
 ;
-;   Read weekly observational data (flask and continuous) and
-;   weekly mean model data for the years of the inversion.
 ;   Calculate monthly diagonal error covariance matrix representing
 ;   the sum of measurement and transport errors.
 ;
-;   sigma =
+;   One way of estimating the uncertainty would be:
+;    sigma =
 ;      sigma(meas)               ( = sqrt(inst precision^2 )
 ;    + sigma(transport error)    ( = sqrt(mean of the 3-day SDs) )
 ;    + sigma(sampling frequency) ( = sqrt(var(CH4mod)/nmod) )
-;    + sigma(intercalibration)   ( = 0, because all data have been scaled to NOAA04 scale)
+;    + sigma(intercalibration)   ( = 0, because all datahave been scaled to NOAA04 scale)
+;
+;   However, the method chosen here estimates the uncertainty from the differences
+;   between observations and model simulations per year, with the mean annual bias
+;   being subtracted from the simulations. The routine, therefore, reads the weekly 
+;   observational data (flask and continuous) and weekly mean a priori model data for 
+;   the years of the inversion and computes the uncertainty statistics.
 ;
 ; CATEGORY:
 ;
@@ -22,21 +27,20 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  inv_error_covariance
+;  inv_error_diagonal_weekly_brd,sim
 ;
 ; INPUTS:
 ;
-;       from: start year of inversion
-;       to: end year of inversion
-;
-; OPTIONAL INPUTS:
-;
+;       sim :  the simulation structure
 ;
 ; KEYWORD PARAMETERS:
 ;
+;       /apost : set this keyword if a posteriori simulation results
+;                should be used instead of a priori simulation
+;
 ; OUTPUTS:
 ;
-;       daily or weekly station data in predefined order
+;       weekly station data in predefined order
 ;             
 ; COMMON BLOCKS:
 ;
@@ -50,11 +54,9 @@
 ;
 ; PROCEDURE:
 ;
-;   inv_error_covariance
-;
 ;     Read all available data from continuous/flask stations and model
 ;     data per month
-;     Output daily or weekly means in monthly tables.
+;     Output weekly means in monthly tables.
 ;
 ; EXAMPLE:
 ;
@@ -94,10 +96,11 @@ PRO inv_error_diagonal_weekly_brd,sim
   syear    = STRCOMPRESS(string(from+indgen(nyears)),/REM)
   ndata    = IntArr(nmonths,nyears)
 
-  sigma_meas  = FltArr(nst)+!values.f_nan
-  sigma_trans = FltArr(nst,nyears)+!values.f_nan
-  sigma_freq  = FltArr(nst,nyears)+!values.f_nan
-  sigma_stan  = FltArr(nst,nyears)+!values.f_nan  
+  ;;sigma_meas  = FltArr(nst)+!values.f_nan
+  ;;sigma_trans = FltArr(nst,nyears)+!values.f_nan
+  ;;sigma_freq  = FltArr(nst,nyears)+!values.f_nan
+  ;;sigma_stan  = FltArr(nst,nyears)+!values.f_nan
+
   sigma_all   = FltArr(nst,nyears)+!values.f_nan
   sigma_mean  = FltArr(nst)+!VALUES.f_nan
   sigmasquare = FltArr(nst)+!VALUES.f_nan  
@@ -128,7 +131,7 @@ PRO inv_error_diagonal_weekly_brd,sim
      nmax = n_elements(iuniq)
      snames = ch4obs[isort[iuniq]].name
                                        
-     ;; loop over these stations and compute statistisc
+     ;; loop over these stations and compute statistics
      FOR i=0,nmax-1 DO BEGIN
         
         istat = (WHERE(sim.stats EQ snames[i],cnt))[0]
@@ -170,7 +173,7 @@ PRO inv_error_diagonal_weekly_brd,sim
   IF sim.flask THEN suffix = 'flask_'
   IF sim.nobg THEN suffix = suffix + 'nobg_'
 
-  filemean = sim.basedir+'ERRORCOVARIANCE/inv_errorcovariance_stations_'+suffix+$
+  filemean = sim.errcovdir+'inv_errorcovariance_stations_'+suffix+$
              sim.name+'_'+sn+'_'+'mean.dat' 
 
   ;; write out overall statistics
@@ -183,40 +186,6 @@ PRO inv_error_diagonal_weekly_brd,sim
   ;************************************************************
   FOR ij=0,nyears-1 DO BEGIN
 
-    ;; the following lines are obsolete, why d
-
-    ;; ;;***************************************
-    ;; ;;* write out model data for every month 
-    ;; ;;***************************************
-    ;; ipos = 0L ; data pointer
-    
-    ;; FOR im=0,nmonths-1 DO BEGIN
-
-    ;;    IF keyword_set(sim.flask) THEN BEGIN  
-    ;;       monfile = sim.basedir+'MODINPUT/m_allweekly_flask_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'        
-    ;;       IF keyword_set(sim.nobg) THEN $
-    ;;          monfile  = sim.basedir+'MODINPUT/m_allweekly_flask_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'          
-    ;;    ENDIF ELSE BEGIN
-    ;;       monfile = sim.basedir+'MODINPUT/m_allweekly_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
-    ;;       IF keyword_set(sim.nobg) THEN $
-    ;;          monfile = sim.basedir+'MODINPUT/m_allweekly_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
-    ;;       IF keyword_set(sim.special) THEN $
-    ;;          monfile = sim.basedir+'MODINPUT/m_allweekly_special_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
-    ;;    ENDELSE
-    ;;    openw,lun,monfile,/get_lun
-    ;;    WHILE STRMID(ch4mod[ipos].dtg,4,2) EQ mon[im] DO BEGIN
-    ;;       printf,lun,ch4mod[ipos].dtg,ch4mod[ipos].name,$
-    ;;              ch4obs[ipos].lat,ch4obs[ipos].lon,ch4mod[ipos].ch4,$
-    ;;              format='(a12,1x,a3,1x,f8.3,1x,f8.3,1x,f9.4)'
-    ;;       printf,lun,ch4mod[ipos].ch4trace
-    ;;       ipos ++
-    ;;       IF ipos EQ n_elements(ch4mod) THEN GOTO,nextmonth
-    ;;    ENDWHILE
-
-    ;;    nextmonth:
-    ;;    free_lun,lun
-    ;; ENDFOR
-
      FOR im=0,nmonths-1 DO BEGIN
         
         yyyymm = syear[ij]+mon[im]
@@ -224,7 +193,7 @@ PRO inv_error_diagonal_weekly_brd,sim
         read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
         
         IF syear[ij] eq '2006' and im eq 1 THEN BEGIN
-           ;; for some reason, Florian decided to skip first days of Feb 2006
+           ;; due to switch in vertical model levels, first days in Feb 2006 are missing
            ind = WHERE(dtg2gvtime(ch4obs.dtg) GE dtg2gvtime('200602030000'),c)
            namec    = ch4obs[ind].name
         ENDIF ELSE BEGIN
@@ -234,23 +203,23 @@ PRO inv_error_diagonal_weekly_brd,sim
         
         IF keyword_set(sim.flask) THEN BEGIN
            IF keyword_set(sim.nobg) THEN $
-              monfile = sim.basedir+'ERRORCOVARIANCE/'+$
+              monfile = sim.errcovdir+$
                         'inv_errorcovariance_stations_wm_mismatchonly_flask_nobg_'+sn+$
                         '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat' $               
            ELSE $
-              monfile = sim.basedir+'ERRORCOVARIANCE/'+$
+              monfile = sim.errcovdir+$
                         'inv_errorcovariance_stations_wm_mismatchonly_flask_'+sn+$
                         '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
         ENDIF ELSE BEGIN
-           monfile = sim.basedir+'ERRORCOVARIANCE/'+$
+           monfile = sim.errcovdir+$
                      'inv_errorcovariance_stations_wm_mismatchonly_'+sn+'_'+$
                      sim.name+'_'+syear[ij]+mon[im]+'.dat'       
            IF keyword_set(sim.nobg) THEN $
-              monfile = sim.basedir+'ERRORCOVARIANCE/'+$
+              monfile = sim.errcovdir+$
                         'inv_errorcovariance_stations_wm_mismatchonly_nobg_'+sn+$
                         '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
            IF keyword_set(sim.special) THEN $
-              monfile = sim.basedir+'ERRORCOVARIANCE/'+$
+              monfile = sim.errcovdir+$
                         'inv_errorcovariance_stations_wm_mismatchonly_special_'+sn+$
                         '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'                                   
         ENDELSE
@@ -258,7 +227,12 @@ PRO inv_error_diagonal_weekly_brd,sim
         printf,lun,'STN    SIG_ALL'
         FOR i=0,nc-1 DO BEGIN
            ind = WHERE(namec[i] eq sim.stats,c1)
-           IF c1 eq 1 THEN printf,lun,namec[i],sigma_all[ind,ij],format='(a3,1x,f9.3)' ELSE stop
+           IF c1 NE 1 THEN stop
+           IF finite(sigma_all[ind,ij]) EQ 0 THEN BEGIN
+              printf,lun,namec[i],sigma_mean[ind],format='(a3,1x,f9.3)'
+           ENDIF ELSE BEGIN
+              printf,lun,namec[i],sigma_all[ind,ij],format='(a3,1x,f9.3)'
+           ENDELSE
         ENDFOR
         free_lun,lun
      ENDFOR

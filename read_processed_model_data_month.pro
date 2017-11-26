@@ -69,8 +69,6 @@ PRO read_processed_model_data_month,sim,yyyymm,ch4recs=ch4recs
      RETURN
   ENDIF
   
-  modelprocdir = sim.basedir+'MODINPUT/'
-
   nst      = n_elements(sim.stats)
   sn       = STRCOMPRESS(nst,/REM)+'stats'  
 
@@ -87,7 +85,7 @@ PRO read_processed_model_data_month,sim,yyyymm,ch4recs=ch4recs
   yyyy = STRMID(yyyymm,0,4)
   mm = STRMID(yyyymm,4,2)
 
-  file = modelprocdir+'m_allweekly_flask_'+sn+'_'+sim.name+'_'+yyyy+mm+'.dat'     
+  file = sim.moddir+'m_allweekly_flask_'+sn+'_'+sim.name+'_'+yyyy+mm+'.dat'     
      
   openr,lun,file,/get_lun
   WHILE NOT eof(lun) DO BEGIN

@@ -21,7 +21,7 @@ FUNCTION station_info,statid
   yrange = [1600.,2000.]
 
   CASE strlowcase(statid) OF
-     'abp': statrec={id:statid,name:'Arembepe',lon:-38.17,lat:-12.77,alt:0.,yrange:yrange}
+     'abp': statrec={id:statid,name:'Arembepe',lon:-38.17,lat:-12.77,alt:1.,yrange:yrange}
      'alt': statrec={id:statid,name:'Alert',lon:-62.5167,lat:82.45,alt:0.,yrange:yrange}
      'ams': statrec={id:statid,name:'Amsterdam Island',lon:77.53,lat:-37.8,alt:55.,yrange:yrange}
      'amt': statrec={id:statid,name:'Argyle',lon:-68.68,lat:45.03,alt:50.,yrange:yrange}
@@ -58,7 +58,7 @@ FUNCTION station_info,statid
      'hpb': statrec={id:statid,name:'Hohenpeissenberg',lon:11.02,lat:47.8,alt:985.,yrange:yrange}
      'hun': statrec={id:statid,name:'Hegyhatsal',lon:16.65,lat:46.95,alt:248.,yrange:yrange}
      'ice': statrec={id:statid,name:'Storhofdi Iceland',lon:-20.2833,lat:63.400,alt:118.,yrange:yrange}
-     'izo': statrec={id:statid,name:'Izana',lon:0.,lat:0.,alt:0.,yrange:yrange}
+     'izo': statrec={id:statid,name:'Izana',lon:0.,lat:0.,alt:2373.,yrange:yrange}
      'jfj': statrec={id:statid,name:'Jungfraujoch',lon:0.,lat:0.,alt:0.,yrange:yrange} 
      'key': statrec={id:statid,name:'Key Biscane',lon:-80.2,lat:25.67,alt:3.,yrange:yrange}
      'kmw': statrec={id:statid,name:'Kollumerwaard',lon:6.28,lat:53.33,alt:0.,yrange:yrange}
@@ -89,7 +89,7 @@ FUNCTION station_info,statid
      'rpb': statrec={id:statid,name:'Ragged Point',lon:-59.43,lat:13.17,alt:45.,yrange:yrange}
      'shm': statrec={id:statid,name:'Shemya Island',lon:174.08,lat:52.72,alt:40.,yrange:yrange}
      'sis': statrec={id:statid,name:'Shetland Lerwick',lon:-1.275,lat:59.854,alt:84.,yrange:yrange}
-     'sey': statrec={id:statid,name:'Mahe Island',lon:55.17,lat:-4.67,alt:0.,yrange:yrange} ;'Seychelles'
+     'sey': statrec={id:statid,name:'Mahe Island',lon:55.532,lat:-4.682,alt:2.,yrange:yrange} ;'Seychelles'
      'sgp': statrec={id:statid,name:'Southern Great Plains',lon:-97.5,lat:36.78,alt:314.,yrange:yrange}
      'smo': statrec={id:statid,name:'Samoa',lon:0.,lat:0.,alt:0.,yrange:yrange}
      'ssl': statrec={id:statid,name:'Schauinsland',lon:7.92,lat:47.92,alt:1205.,yrange:yrange}

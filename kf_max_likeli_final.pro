@@ -19,7 +19,7 @@ FUNCTION kf_max_likeli_final,M,Minv,v,zlen=zlen,nobse=nobse
  ;  zi=logdetM^(-0.5) # v
  ;  qi=zi # transpose(zi)
  ;  print,qi/n
-   print,zlen
+;   print,zlen
 
 ;stop
 

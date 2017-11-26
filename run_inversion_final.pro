@@ -44,7 +44,7 @@
 
 @inv_tools_brd.pro
 
-PRO run_inversion_final
+PRO run_inversion_final,sim=sim
 
   ;; basic simulation configuration and directory settings
   run = 'NEW_DLR'               ; or '22.4'
@@ -57,9 +57,9 @@ PRO run_inversion_final
   ;; activate steps
   step1 = 0   ; step1: read in original obs data and write to monthly files of weekly means
   step2 = 0   ; step2: read in model receptor output and write to monthly files of weekly means
-  step3 = 1   ; step3: compute model-data mismatch first time
+  step3 = 0   ; step3: compute model-data mismatch first time
   step4 = 0   ; step4: run preliminary inversion to compute aposteriori model-data mismatch
-  step5 = 0   ; step5: compute model-data mismatch second time using aposteriori model data
+  step5 = 1   ; step5: compute model-data mismatch second time using aposteriori model data
   step6 = 0   ; step6: run final inversion
   step7 = 0   ; step7: run inv_emissions_ratio to determine model estimate separated into ategories
   step8 = 0   ; step8: run plot programs      
@@ -99,9 +99,9 @@ PRO run_inversion_final
      print, '4. Run preliminary inversion'
      hdump    = 1
      rapriori = 1
-     inv_run_final,sim=sim,hdump=hdump,weekly=weekly,keeppos=keeppos,serdllh=serdllh,sumdllh=sumdllh,$
-                   serzlen=serzlen,sumzlen=sumzlen,flask=flask,rapriori=rapriori,stats=stats,$
-                   startcf=startcf,nobg=nobg,special=special,nobse=nobse
+     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,sumdllh=sumdllh,$
+                 serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
+                 sernobse=sernobse
   ENDIF ELSE BEGIN
      print, 'Skipped step4: running preliminary inversion to compute aposteriori model-data mismatch'      
   ENDELSE
@@ -109,8 +109,7 @@ PRO run_inversion_final
   ; 5. compute new observational errors that go into the final inversion
   IF keyword_set(step5) THEN BEGIN
     print, '5. Compute error covariance values again for final inversion'
-    inv_error_diagonal_weekly_aposteriori_final,sim=sim,stats=stats,flask=flask,ufact=ufact,$
-       nobg=nobg,special=special,startcf=startcf
+    inv_error_diagonal_weekly_aposteriori_brd,sim,ufact=ufact
   ENDIF ELSE BEGIN
      print, 'Skipped step5: computing error covariance values again for final inversion'
   ENDELSE  
@@ -120,9 +119,9 @@ PRO run_inversion_final
      print, '6. Run final inversion'
      hdump     = 1
      rapriori  = 0              ;1
-     inv_run_final,sim=sim,hdump=hdump,weekly=weekly,keeppos=keeppos,serdllh=serdllh,sumdllh=sumdllh,$
-                   serzlen=serzlen,sumzlen=sumzlen,flask=flask,rapriori=rapriori,stats=stats,$
-                   startcf=startcf,nobg=nobg,special=special,nobse=nobse
+     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,sumdllh=sumdllh,$
+                 serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
+                 sernobse=sernobse
   ENDIF ELSE BEGIN
      print, 'Skipped step6: running final inversion'        
   ENDELSE        
