@@ -18,22 +18,24 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
-;                          post=post,pripost=pripost,eps=eps
-;                            
+;  plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
+;                            post=post,pripost=pripost,bg=bg,eps=eps,dump=dump     
 ; INPUTS:
 ;
 ;       sim              : the simulation structure, see inv_configurations.pro
 ;
 ; KEYWORD PARAMETERS:
 ;
-;       syyyy (string)   : first year plot
+;       syyyy (string)   : first year to plot
 ;       eyyyy (string)   : last year to plot
+;       /prelim          : set this keyword to plot results of preliminary inversion
 ;       /prior           : set this keyword to plot obs and prior
 ;       /post            : set this keyword to plot obs and posterior
 ;       /pripost         : set this keyword to plot all
 ;       /bg              : set this keyword to plot backgrounds (oldest age class)
 ;       /eps             : set this keyword to write to eps file instead of screen
+;       /dump            : set this keyword to write out station data (obs, apri, apost)
+;                          to files (one file per station)
 ;
 ; OUTPUTS:
 ;
@@ -56,7 +58,6 @@
 ; 
 ; DB 24 November 2017, major rewrite
 ;-
-
 
   ;; Last settings by Florian
   ;;
@@ -83,17 +84,12 @@
   ;;                'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
   ;;                'cya',   'syo',   'hba']
                  
-  ;; dat = ['0104','0112','0120','0128','0204','0211','0218','0226','0304','0312','0320','0328','0404','0412','0420','0427',$
-  ;;        '0504','0512','0520','0528','0604','0612','0620','0627','0704','0712','0720','0728','0804','0812','0820','0828',$
-  ;;        '0904','0912','0920','0927','1004','1012','1020','1028','1104','1112','1120','1127','1204','1212','1220','1228']
-
-
 
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
-                            post=post,pripost=pripost,bg=bg,eps=eps
+PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
+                            post=post,pripost=pripost,bg=bg,eps=eps,dump=dump
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
@@ -155,7 +151,7 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
         read_processed_model_data_month,sim,yyyymm[ind],ch4recs=ch4mod
         IF keyword_set(post) OR keyword_set(pripost) THEN BEGIN
            inv_calculate_posterior_tseries,sim,yyyymm[ind],ch4obs=ch4tmp,ch4apri=ch4mod,$
-                                           sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post
+                                           sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post,prelim=prelim
         ENDIF
 
         IF keyword_set(bg) THEN BEGIN
@@ -215,6 +211,27 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
      seasapri[*,i]=seasapri[*,i]/nyavg[i]
      seaspost[*,i]=seaspost[*,i]/nyavg[i]
   ENDFOR
+
+  ;; write out station data to file
+  IF keyword_set(dump) THEN BEGIN
+     FOR i=0,nst-1 DO BEGIN
+        filename = sim.outdir + 'station_'+sim.stats[i]+'_'+sn+'_'+sim.name+'_'+$
+                   qunc+'_tseries.txt'
+        openw,lun,filename,/get_lun
+        printf,lun,'yyyymm  CH4obs(ppb) CH4apri(ppb) CH4apost(ppb)'
+        format = '(a6,3(f13.2))'
+        FOR k=0,n_elements(yyyymm)-1 DO BEGIN
+           IF finite(ch4obs[k,i]) THEN BEGIN
+              printf,lun,yyyymm[k],ch4obs[k,i],ch4apri[k,i],$
+                     ch4apost[k,i],format=format
+           ENDIF ELSE BEGIN
+              printf,lun,yyyymm[k],-9999.99,-9999.99,$
+                     -9999.99,format=format
+           ENDELSE
+        ENDFOR
+        free_lun,lun
+     ENDFOR
+  ENDIF
 
   ;; sort stations by increasing latitude
   lats = FltArr(nst)
@@ -280,7 +297,7 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
         plot_tseries,gvt,ch4apri[*,i],/over,color=red,thick=linethick
         plot_tseries,gvt,ch4apri[*,i],psym=plotsymbol(2),/over,color=red,symsize=symsize
      ENDIF
-     IF keyword_set(post) OR keyword_set(priorpost) THEN BEGIN
+     IF keyword_set(post) OR keyword_set(pripost) THEN BEGIN
         IF keyword_set(bg) THEN plot_tseries,gvt,ch4apostbg[*,i],/over,color=blu,thick=linethick
         plot_tseries,gvt,ch4apost[*,i],/over,color=blu,thick=linethick
         plot_tseries,gvt,ch4apost[*,i],psym=plotsymbol(3),/over,color=blu,symsize=symsize
@@ -294,7 +311,7 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
         oplot,months,seasapri[*,i],color=red,thick=linethick
         oplot,months,seasapri[*,i],psym=plotsymbol(2),color=red,symsize=symsize
      ENDIF
-     IF keyword_set(post) OR keyword_set(priorpost) THEN BEGIN
+     IF keyword_set(post) OR keyword_set(pripost) THEN BEGIN
         oplot,months,seaspost[*,i],color=blu,thick=linethick
         oplot,months,seaspost[*,i],psym=plotsymbol(3),color=blu,symsize=symsize
      ENDIF
@@ -305,7 +322,7 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prior=prior,$
             charsize=chs,/normal,alignment=0.5
 
      IF ip EQ nfig OR i EQ (nst-1) THEN BEGIN
-        IF keyword_set(eps) THEN close_ps ELSE wait,2
+        IF keyword_set(eps) THEN close_ps ELSE stop ;wait,2
      ENDIF
   ENDFOR
 

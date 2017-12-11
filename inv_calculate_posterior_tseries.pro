@@ -24,7 +24,7 @@
 ; CALLING SEQUENCE:
 ;
 ;  inv_calculate_posterior_tseries,sim,yyyymm,ch4obs=ch4obs,ch4apri=ch4apri,$
-;                            sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post
+;                            sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post,prelim=prelim
 ;
 ; INPUTS:
 ;
@@ -38,8 +38,9 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
+;   /prelim                  : set this keyword to read results from preliminary inversion
 ;   sa     (DblArr,n,ntrace) : the a priori emissions of the ntrace tracers
-;                             and n months of simulation
+;                              and n months of simulation
 ;   sp     (DblArr,n,ntrace) : the corresponding a posteriori emissions
 ;   fcorr  (DblArr,n,ntrace) : the monthls scaling factors for all ntrace tracers
 ;
@@ -87,7 +88,7 @@
 ;  DB, 26 Nov 2017: first implementation
 ;
 ;-
-PRO inv_calculate_posterior_tseries,sim,yyyymm,ch4obs=ch4obs,ch4apri=ch4apri,$
+PRO inv_calculate_posterior_tseries,sim,yyyymm,prelim=prelim,ch4obs=ch4obs,ch4apri=ch4apri,$
                                     sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post
 
   IF n_elements(sim) EQ 0 THEN BEGIN
@@ -103,19 +104,19 @@ PRO inv_calculate_posterior_tseries,sim,yyyymm,ch4obs=ch4obs,ch4apri=ch4apri,$
   eyyyy    = fix(strmid(sim.eyyyymm,0,4)) & emm = fix(STRMID(sim.eyyyymm,4,2))
   n        = eyyyy*12L+emm-(syyyy*12L+smm)+1 ; number months in inversion
 
+  ;; copy structure from a priori
+  ch4post = ch4apri
+
   ;; get month index of the simulation
   yyyy = fix(STRMID(yyyymm,0,4)) & mm = fix(STRMID(yyyymm,4,2))
   im = (yyyy - syyyy)*12 + mm - smm
-  IF im LT 0 OR im GT (n-1) THEN stop
+  IF im LT 0 OR im GT (n-1) THEN RETURN
 
   ;; read in monthly a priori and a posteriori emissions and scaling factors
   ;; for the whole simulation
   IF n_elements(sa) EQ 0 OR n_elements(sp) EQ 0 OR n_elements(fcorr) EQ 0 THEN BEGIN
-     read_apri_apost_fcorr,sim,sa=sa,sp=sp,fcorr=fcorr
+     read_apri_apost_fcorr,sim,sa=sa,sp=sp,fcorr=fcorr,prelim=prelim
   ENDIF
-
-  ;; copy structure from a priori
-  ch4post = ch4apri
 
   FOR i=0,n_elements(ch4obs)-1 DO BEGIN
 

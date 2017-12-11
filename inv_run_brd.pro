@@ -71,7 +71,7 @@
 ;-
 PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
                 serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
-                sernobse=sernobse
+                sernobse=sernobse,dlr=dlr
 
   sn = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'
   sstart = STRCOMPRESS(string(sim.startcf),/REM)
@@ -136,8 +136,8 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
                                    em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
                                    Spout=Spout,Qpout=Qpout,Saout=Saout,Hdump=Hdump,$
                                    zlen=zlen,dllh=dllh,$
-                                   rapriori=rapriori,nobse=nobse
-                                           
+                                   rapriori=rapriori,nobse=nobse,dlr=dlr
+
      serzlen[i] = zlen
      serdllh[i] = dllh
      sernobse[i] = nobse
@@ -150,30 +150,32 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
      IF i GE (nopt-1) THEN BEGIN
         ;; start in month nopt to take final estimate that has been calculated nopt times
         ;; and is now representative of month i-(nopt-1)
+        QP1[i-(nopt-4),*,*]    = Qpout[(nopt-4)*sim.ntrace:(nopt-3)*sim.ntrace-1,$
+                                       (nopt-4)*sim.ntrace:(nopt-3)*sim.ntrace-1]
+        QP2[i-(nopt-3),*,*]    = Qpout[(nopt-3)*sim.ntrace:(nopt-2)*sim.ntrace-1,$
+                                       (nopt-3)*sim.ntrace:(nopt-2)*sim.ntrace-1]
+        QP3[i-(nopt-2),*,*]    = Qpout[(nopt-2)*sim.ntrace:(nopt-1)*sim.ntrace-1,$
+                                       (nopt-2)*sim.ntrace:(nopt-1)*sim.ntrace-1]
         Qpsave[i-(nopt-1),*,*] = Qpout[(nopt-1)*sim.ntrace:nopt*sim.ntrace-1,$
                                        (nopt-1)*sim.ntrace:nopt*sim.ntrace-1]
-        FOR j=0,sim.ntrace-1 DO BEGIN
-           Qp1[i,0:sim.ntrace-1,j] = Qpout[0:sim.ntrace-1,j]
-           Qp2[i-(nopt-3),0:sim.ntrace-1,j] = Qpout[sim.ntrace:sim.ntrace*2-1,sim.ntrace+j]
-           Qp3[i-(nopt-2),0:sim.ntrace-1,j] = Qpout[2*sim.ntrace:sim.ntrace*3-1,2*sim.ntrace+j]
-        ENDFOR         
-        SP1[i,*]               = Spout[0:sim.ntrace-1]
+        SP1[i-(nopt-4),*]      = Spout[(nopt-4)*sim.ntrace:(nopt-3)*sim.ntrace-1]
         SP2[i-(nopt-3),*]      = Spout[(nopt-3)*sim.ntrace:(nopt-2)*sim.ntrace-1]         
         SP3[i-(nopt-2),*]      = Spout[(nopt-2)*sim.ntrace:(nopt-1)*sim.ntrace-1]         
         Spsave[i-(nopt-1),*]   = Spout[(nopt-1)*sim.ntrace:nopt*sim.ntrace-1]
      ENDIF 
 
-     ;; Attention: estimates for the last few months are only available from less than nopt
-     ;; optimizations
-     IF i EQ (n-1) THEN BEGIN
-        Qpsave[i-1,*,*] = Qpout[sim.ntrace:2*sim.ntrace-1,sim.ntrace:2*sim.ntrace-1]
-        Spsave[i-1,*]   = Spout[sim.ntrace:2*sim.ntrace-1]
-        SP2[i,*]        = Spsave[i-2,*]
-        Qp2[i,*,*]      = Qpsave[i-2,*,*]
-        SP3[i,*]        = Spsave[i-1,*] 
-        Qp3[i,*,*]      = Qpsave[i-1,*,*] 
-        Qpsave[i,*,*]   = Qpout[0:sim.ntrace-1,0:sim.ntrace-1]
-        Spsave[i,*]     = Spout[0:sim.ntrace-1]
+     ;; Estimates for the last few months are only available from 
+     ;; less than nopt optimizations
+     IF i EQ n-1 THEN BEGIN
+        Spsave[i-2,*]   = Spout[(nopt-2)*sim.ntrace:(nopt-1)*sim.ntrace-1]
+        Qpsave[i-2,*,*] = Qpout[(nopt-2)*sim.ntrace:(nopt-1)*sim.ntrace-1,$
+                                (nopt-2)*sim.ntrace:(nopt-1)*sim.ntrace-1]
+        Spsave[i-1,*]   = Spout[(nopt-3)*sim.ntrace:(nopt-2)*sim.ntrace-1]
+        Qpsave[i-1,*,*] = Qpout[(nopt-3)*sim.ntrace:(nopt-2)*sim.ntrace-1,$
+                                (nopt-3)*sim.ntrace:(nopt-2)*sim.ntrace-1]
+        Spsave[i,*]     = Spout[(nopt-4)*sim.ntrace:(nopt-3)*sim.ntrace-1]
+        Qpsave[i,*,*]   = Qpout[(nopt-4)*sim.ntrace:(nopt-3)*sim.ntrace-1,$
+                                (nopt-4)*sim.ntrace:(nopt-3)*sim.ntrace-1]
      ENDIF
      
      Sasave[i,*] = saout[0:sim.ntrace-1]
@@ -207,10 +209,9 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
         q2diag[i,*] = sqrt(diag_matrix(reform(Qp2[i,*,*])))
         q3diag[i,*] = sqrt(diag_matrix(reform(Qp3[i,*,*])))
      ENDFOR
-     
      FOR j=0,sim.ntrace-1 DO BEGIN
         FOR k=0,sim.ntrace-1 DO BEGIN
-           mcovar[j,k] = mean(covar[12:n-1,j,k]) ; mean error covariance
+           mcovar[j,k] = mean(covar[10:n-1,j,k]) ; mean error covariance 1990-2012
            FOR ij=0,nyears-1 DO BEGIN
               ind = WHERE(year[ij] eq yyyysave,cn)
               IF cn gt 0L THEN mcovaryr[ij,j,k] = mean(covar[ind,j,k])
@@ -283,6 +284,7 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
      printf,lun,Qp1
      printf,lun,Qp2
      printf,lun,Qp3 
+     printf,lun,uncert    
   ENDELSE 
   free_lun,lun
   
@@ -339,5 +341,5 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
   free_lun,lun    
   
   print, 'End of program: inversion completed.'
-;stop
+
 END

@@ -105,13 +105,13 @@ PRO read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,rapriori=rapriori
      ENDELSE
   ENDIF ELSE BEGIN    
      IF keyword_set(sim.flask) THEN BEGIN
-        errorfile = sim.errcovdir+'inv_errorcovariance_wm_mismatchonly_aposteriori_flask_'+$
+        errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_aposteriori_flask_'+$
                     sn+'_'+sim.name+'_'+yyyymm+'.dat'         
      ENDIF ELSE BEGIN
-        errorfile = sim.errcovdir+'inv_errorcovariance_wm_mismatchonly_aposteriori_'+$
+        errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_aposteriori_'+$
                     sn+'_'+sim.name+'_'+yyyymm+'.dat'      
         IF keyword_set(sim.special) THEN $
-           errorfile = sim.errcovdir+'inv_errorcovariance_wm_mismatchonly_aposteriori_special_'+$
+           errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_aposteriori_special_'+$
                        sn+'_'+sim.name+'_'+yyyymm+'.dat'
      ENDELSE
   ENDELSE    

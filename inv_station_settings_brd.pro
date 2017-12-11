@@ -153,7 +153,6 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
         ;;ufact[39]=1.0   ;shm
         ;;ufact[81:90] =1.0
      END
-
      'special': BEGIN ; same as 'all' but excluding sites llb, kmw, bkt (total 88 sites)
       stats  =   [   'alt',   'brw',            'cdl',   'zgt',   'etl',            'mhd',   'ngl',$
                      'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$

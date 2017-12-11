@@ -87,7 +87,7 @@
 PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
                                   em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
                                   Spout=Spout,Qpout=Qpout,Saout=Saout,Hdump=Hdump,$
-                                  zlen=zlen,dllh=dllh,rapriori=rapriori,nobse=nobse
+                                  zlen=zlen,dllh=dllh,rapriori=rapriori,nobse=nobse,dlr=dlr
 
   minalogemiss = -20D           ; minimum log number when an emission is zero
                                 ; this corresponds to 7.5 x 1e-16 Tg/yr, which is
@@ -113,7 +113,7 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   IF n_elements(ch4mod) NE n_elements(ch4obs) THEN stop
   
   ;************************************************************************
-  ; In February 2006, model data are only available from 3 February on, 
+  ; In February 2006, model data are only available from 3 February onwards, 
   ; because of the change from lower vertical to higher vertical resolution 
   ; ECMWF data. Hence, restrict data to the same period.
   ;************************************************************************
@@ -213,8 +213,7 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   ENDFOR
 
   IF month1 THEN BEGIN
-     H = DblArr(sim.ntrace,nc)
-     H[*,*] = sensin[*,*,0]
+     H = sensin
   ENDIF ELSE IF month2 THEN BEGIN
      H = DblArr(sim.ntrace*2,nc)
      H[0:sim.ntrace-1,*]              = sensin[*,*,0]
@@ -272,7 +271,7 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
         Qa = Diag_Matrix(sim.scaleq^2) ELSE $
            Qa = Diag_Matrix( (sim.scaleq*Sa)^2 ) ; transform to diag. matrix
   ENDIF ELSE IF month2 THEN BEGIN
-     Qa      = DblArr(2*sim.ntrace,2*sim.ntrace)
+     Qa = DblArr(2*sim.ntrace,2*sim.ntrace)
      IF keyword_set(sim.keeppos) THEN $
         FOR i=0,sim.ntrace-1 DO Qa[i,i] = sim.scaleq[i]^2 ELSE $
            FOR i=0,sim.ntrace-1 DO Qa[i,i] = (sim.scaleq[i]*Sa[i])^2
@@ -315,7 +314,7 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr  
   
   FOR it=0,sim.ntrace-1 DO BEGIN
-     FOR i=0,nc-1 DO BG[i,it] = fcorr[it]*(ch4mod[i].ch4trace[(sim.nage-1)*sim.ntrace+it])                                     
+     FOR i=0,nc-1 DO BG[i,it] = fcorr[it]*(ch4mod[i].ch4trace[(sim.nage-1)*sim.ntrace+it])       
   ENDFOR
   
   ;; subtract simulated background from the observations before
@@ -339,40 +338,15 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   v    = zmod
   dllh = kf_max_likeli_final(M,Minv,v,zlen=zlen,nobse=nobse)
 
-  ;; IF month1 THEN BEGIN
-  ;;    Spout = DblArr(sim.ntrace)
-  ;;    Qp    = DblArr(sim.ntrace,sim.ntrace)
-  ;; ENDIF ELSE IF month2 THEN BEGIN
-  ;;    Spout = DblArr(2*sim.ntrace)
-  ;;    Qp    = DblArr(2*sim.ntrace,2*sim.ntrace)
-  ;; ENDIF ELSE IF month3 THEN  BEGIN
-  ;;    Spout = DblArr(3*sim.ntrace)
-  ;;    Qp    = DblArr(3*sim.ntrace,3*sim.ntrace)
-  ;; ENDIF ELSE BEGIN
-  ;;    Spout = DblArr(4*sim.ntrace)
-  ;;    Qp    = DblArr(4*sim.ntrace,4*sim.ntrace)
-  ;; ENDELSE
-  
-  ;; the following lines in the original code seem wrong and have
-  ;; therefore been uncommented (DB)
-  ;; IF keyword_set(sim.keeppos) THEN BEGIN
-  ;;   SAP[where(SAP eq minalogemiss] = 0.00000
-  ;;ENDIF
-  
-  Spout = SAP + KALMAN ## zmod
-  Qpout = Qa -KALMAN ## H ## Qa
+  ;; Kalamn update only after first few months have been filled with data
+  IF month1 EQ 0 AND month2 EQ 0 AND month3 EQ 0 THEN BEGIN
+     Spout = SAP + KALMAN ## zmod
+     Qpout = Qa -KALMAN ## H ## Qa
+  ENDIF ELSE BEGIN
+     Spout = SAP
+     Qpout = Qa
+  ENDELSE
 
-  ;; again, the following lines look strange and have been uncommented
-  ;;aa=n_elements(Spout)-1
-  ;;Spout_temp=Spout
-  ;;Spout[where(finite(Spout) eq 0)]=0.00000 
-  ;;Spout[aa]=Spout_temp[aa]
-  
-  ;;Qpout = Qp
-  
-  ;;ind1 = WHERE(finite(Spout) eq 0,c1) 
-  ;;IF c1 gt 0L THEN stop 
-  
   FOR it=0,sim.ntrace-1 DO IF finite(Spout[it]) eq 0 THEN stop 
   
 END

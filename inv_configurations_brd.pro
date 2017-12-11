@@ -16,12 +16,14 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;    sim = inv_configurations_brd(run=run,ok=ok)
+;    sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
 ;
 ; INPUTS:
 ;
-;   run: the inversion configuration name
-;        The latest configuations used by Florian were 'NEW_DLR' and '22.4'
+;   run     : the inversion configuration name
+;             The latest configuations used by Florian were 'NEW_DLR' and '22.4'
+;   sconfig : The station configuration, options are 'flask', 'all', 'special', 'flask_DLR2'
+;   /dlr    : Set this keyword to set paths for DLR data processing
 ;
 ; OUTPUTS:
 ;
@@ -77,7 +79,7 @@
 ;   DB, 04 Jan 2017:  first implementation
 ;-
 @inv_tools_brd
-FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
+FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
 
   ;***********************************************
   ; define inversion parameters
@@ -88,7 +90,11 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
   name = 'final_sim01'                                   ; name of inversion run
   syyyymm = '198902' & eyyyymm = '201212'                ; start and end date of inversion
 
-  basedir = '/project/arf/nas/INVERSION/'                ; base directory for intermediate and final files
+  IF keyword_set(DLR) THEN $
+     basedir = '/project/arf/nas/INVERSION_DLR/' $       ; base directory for intermediate and final files
+  ELSE $
+     basedir = '/project/arf/nas/INVERSION/'             ; base directory for intermediate and final files
+
   obsdir = basedir+'OBSINPUT/'                           ; directory of pre-processed observation data
   moddir = basedir+'MODINPUT/'                           ; directory of pre-processed model data
   errcovdir = basedir+'ERRORCOVARIANCE/'                 ; directory of station errors (diff model - station)
@@ -348,13 +354,23 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,ok=ok
      ;; 1.77183 0.917666 0.936982 0.975773 0.998232 0.982960  1.07199 0.914840
 
      ;; finally used (corresponds to scaling factors at the end of 1992
+;     startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
+;                0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,1.00000,$
+;                1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
+;                0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
+;                0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
+;                2.27135,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
      startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
-                0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,1.00000,$
+                0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,0.6,$
                 1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
                 0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
                 0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
-                2.27135,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
-
+                1.0,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
+     ;; BB North America overestimated
+     startcf[16]=0.6
+     IF keyword_set(dlr) THEN BEGIN
+        startcf[*]=1.*1800./1700.
+     ENDIF
   ENDELSE
 
   sim = {name:name,$

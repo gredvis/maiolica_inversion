@@ -45,7 +45,6 @@ PRO run_inversion_final_DLR
   ;***********************************************
   ; define inversion parameters
   ;***********************************************
-
        sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
          modeldir:'/nas/arf/output/',$
@@ -86,7 +85,6 @@ sim = {name:'final_sim01',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.27,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.65,1.55,1.55,1.55,1.55,1.55,1.55,1.55,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,1.5,0.9,0.9,0.9,0.9],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all , antarctica scaled
 
-
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
          modeldir:'/nas/arf/output/',$
@@ -111,7 +109,6 @@ sim = {name:'final_sim01',$
          syyyymm:'198902',eyyyymm:'199312',scaleq:[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all
 
-
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
          modeldir:'/nas/arf/output/',$
@@ -127,7 +124,6 @@ sim = {name:'final_sim01',$
          hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all flask initialised not to 1
-
 
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
@@ -145,7 +141,6 @@ sim = {name:'final_sim01',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,0.50,0.50,0.50,0.50],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all flask initialised not to 1
 
-
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
          modeldir:'/nas/arf/output/',$
@@ -154,8 +149,6 @@ sim = {name:'final_sim01',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.20,0.20,0.20,0.20],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all flask initialised not to 1
 
-
-
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
          modeldir:'/nas/arf/output/',$
@@ -163,8 +156,6 @@ sim = {name:'final_sim01',$
          hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,1.50,0.50,0.50,0.50,0.50],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all flask initialised not to 1
-
-
 
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
@@ -214,8 +205,6 @@ sim = {name:'final_sim01',$
          hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10],$
          ntrace:48,nage:5} ;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23
-
-
 
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
@@ -293,7 +282,6 @@ sim = {name:'final_sim01',$
          syyyymm:'200901',eyyyymm:'201212',scaleq:[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.4,0.4,0.4,0.4],$
          ntrace:48,nage:5} ;keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori uncert from litterature, taking into account diff regions and also fact that we optimize each month 4 times  22.4000
 
-
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
          modeldir:'/nas/arf/output/',$
@@ -301,7 +289,6 @@ sim = {name:'final_sim01',$
          hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
          syyyymm:'198901',eyyyymm:'201212',scaleq:[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.4,0.4,0.4,0.4],$
          ntrace:48,nage:5} ;keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori uncert from litterature, taking into account diff regions and also fact that we optimize each month 4 times  23.7000 DLR
-
 
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
@@ -318,11 +305,6 @@ sim = {name:'final_sim01',$
          hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
          syyyymm:'198902',eyyyymm:'201212',scaleq:[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.4,0.4,0.4,0.4],$
          ntrace:48,nage:5} ;keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori uncert from litterature, taking into account diff regions and also fact that we optimize each month 4 times  23.7000 DLR
-
-
-
-
-
 
 sim = {name:'final_sim01',$
          obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
@@ -430,7 +412,7 @@ nstats = n_elements(stats)
 ;ufact[81:90] =1.0                      
     
     IF keyword_set(special) THEN BEGIN
-      ; all data included
+      ; all data included (88 stations)
       ; stats includes data from 34 continuous stations, until 'cgo'
       stats  =   [   'alt',   'brw',   'cdl',   'zgt',   'etl',   'mhd',   'ngl',$
                      'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
@@ -467,7 +449,7 @@ nstats = n_elements(stats)
 ;                   'mkn',   'sey',   'asc',   'cfa',   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',$
 ;                   'crz',   'mqa',   'tdf',   'psa',   'cya',   'syo',   'hba']
 
-;DLR wo smo,ice,sis,amt
+;DLR wo smo,ice,sis,amt (65 stations)
     stats  =   [   'alt',   'brw',   'mhd',   'mlo',   'rpb',   'thd',   'wsa',   'cgo',   'izo',$
                    'zep',   'sum',$
                    'ter',   'pal',   'cba',   'bal',   'shm',   'oxk',   'lpo',   'esp',$
@@ -482,7 +464,7 @@ nstats = n_elements(stats)
     
 ufact[*] = 1.
 
-;DLR wo smo,ice,sis,amt and LPO,BSC,WKT removed
+;DLR wo smo,ice,sis,amt and LPO,BSC,WKT removed (62 stations)
     stats  =   [   'alt',   'brw',   'mhd',   'mlo',   'rpb',   'thd',   'wsa',   'cgo',   'izo',$
                    'zep',   'sum',$
                    'ter',   'pal',   'cba',   'bal',   'shm',   'oxk', 'esp',$

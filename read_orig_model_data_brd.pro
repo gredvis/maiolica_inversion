@@ -15,7 +15,7 @@
 ; CALLING SEQUENCE:
 ;
 ;   read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,mch4=ch4stat,trace=ch4trace,$
-;                        nmod=numstat,mdtg=dtgstat,oldest=oldest
+;                        nmod=numstat,mdtg=dtgstat,oldest=oldest,dlr=dlr
 ;
 ; INPUTS:
 ;
@@ -26,6 +26,7 @@
 ; KEYWORD PARAMETERS:
 ;
 ;  ch4obs        structarr(nobs): array of structures containing observation data
+;  /dlr                         : set this keyword to process DLR model output
 ;  /oldest                      : set this key to return only the values for
 ;                                 the oldest age class instead of all classes
 ;
@@ -64,6 +65,7 @@
 ;       and simplified.
 ;   DB 11 Feb 2017: modified to return array of structures with
 ;       same dimension as observation array ch4obs
+;   DB 03 Dec 2017: added option to process DLR model output
 ;-
 
 
@@ -71,7 +73,7 @@
 ;*  subroutine to read in daily FLEXPART receptor output for a complete year
 ;***************************************************************************************
 PRO read_receptor_output_brd,sim,yyyy,ntime=ntime,time=timecollect,$
-                             mch4=mch4collect,mtrace=mtracollect
+                             mch4=mch4collect,mtrace=mtracollect,dlr=dlr
 
   ppbfact = 1.e9
   nmonths = 12
@@ -94,17 +96,22 @@ PRO read_receptor_output_brd,sim,yyyy,ntime=ntime,time=timecollect,$
   FOR im=0,nmonths-1 DO BEGIN
   
     yyyymm = yyyy+STRING(im+1,format='(i2.2)')
-    read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+    IF keyword_set(dlr) THEN BEGIN
+       read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+    ENDIF ELSE BEGIN
+       read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+    ENDELSE
     IF n_elements(info) NE nst THEN BEGIN
        print,'not all stations found in receptor output'
        stop
     ENDIF
+
     ;; convert dtg into day index (=0 for first day of the year)
     tid = floor(dtg2gvtime(dtg)-dtg2gvtime(yyyy+'01010000'))
 
     timecollect[tid] = dtg
-    mch4collect[*,tid] = total(data.pptv[1:ntot,*],1)
-    mtracollect[*,*,tid]= data.pptv[1:ntot,*]
+    mch4collect[*,tid] = total(data.ppb[1:ntot,*],1)
+    mtracollect[*,*,tid]= data.ppb[1:ntot,*]
 
  ENDFOR                         ; end loop over months in year yyyy 
     
@@ -114,7 +121,7 @@ END
 ;********************************************************************
 ;                   main routine
 ;********************************************************************
-PRO read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,ch4mod=ch4mod,oldest=oldest
+PRO read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,ch4mod=ch4mod,dlr=dlr,oldest=oldest
   
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
@@ -122,7 +129,7 @@ PRO read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,ch4mod=ch4mod,oldest=oldest
   ENDIF
 
   ; read receptor output at the nstat stations for the current year
-  read_receptor_output_brd,sim,yyyy,ntime=ntime,time=time,mch4=mch4,mtrace=mtrace
+  read_receptor_output_brd,sim,yyyy,ntime=ntime,time=time,mch4=mch4,mtrace=mtrace,dlr=dlr
 
   ;; create output structure similar to ch4obs
   nobs = n_elements(ch4obs)

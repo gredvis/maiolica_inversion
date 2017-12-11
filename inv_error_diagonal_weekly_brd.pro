@@ -72,7 +72,7 @@
 ;******************************************************
 ;* MAIN PROGRAM
 ;******************************************************
-PRO inv_error_diagonal_weekly_brd,sim
+PRO inv_error_diagonal_weekly_brd,sim,apost=apost
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
@@ -125,6 +125,21 @@ PRO inv_error_diagonal_weekly_brd,sim
      ;;************************************************
      read_processed_model_data_year,sim,syear[ij],ch4recs=ch4mod
      
+     IF keyword_set(apost) THEN BEGIN
+        FOR i=0,nmonths-1 DO BEGIN
+           yyyymm=syear[ij]+mon[i]
+           index = WHERE(STRMID(ch4obs.dtg,0,6) EQ yyyymm,cnt)
+           IF cnt EQ 0 THEN stop
+           inv_calculate_posterior_tseries,sim,yyyymm,ch4obs=ch4obs[index],$
+                                           ch4apri=ch4mod[index],/prelim,$
+                                           sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4tmp
+           IF i EQ 0 THEN ch4post=ch4tmp ELSE ch4post=[ch4post,ch4tmp]
+        ENDFOR
+        IF n_elements(ch4post) NE n_elements(ch4mod) THEN stop
+        ;; replace prior by posterior time series
+        ch4mod = ch4post
+     ENDIF
+
      ;; get names of stations available in this year
      isort = sort(ch4obs.name)
      iuniq = uniq(ch4obs[isort].name)
@@ -170,11 +185,12 @@ PRO inv_error_diagonal_weekly_brd,sim
   print, 'Mean square error averaged over all stations (preliminary): ', mean(sigmasquare) 
   
   suffix = ''
-  IF sim.flask THEN suffix = 'flask_'
+  IF keyword_set(apost) THEN suffix='aposteriori_'
+  IF sim.flask THEN suffix = suffix + 'flask_'
   IF sim.nobg THEN suffix = suffix + 'nobg_'
 
   filemean = sim.errcovdir+'inv_errorcovariance_stations_'+suffix+$
-             sim.name+'_'+sn+'_'+'mean.dat' 
+             sn+'_'+sim.name+'_mean.dat' 
 
   ;; write out overall statistics
   openw,lun,filemean,/get_lun
@@ -201,28 +217,9 @@ PRO inv_error_diagonal_weekly_brd,sim
         ENDELSE
         nc       = n_elements(namec)
         
-        IF keyword_set(sim.flask) THEN BEGIN
-           IF keyword_set(sim.nobg) THEN $
-              monfile = sim.errcovdir+$
-                        'inv_errorcovariance_stations_wm_mismatchonly_flask_nobg_'+sn+$
-                        '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat' $               
-           ELSE $
-              monfile = sim.errcovdir+$
-                        'inv_errorcovariance_stations_wm_mismatchonly_flask_'+sn+$
-                        '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
-        ENDIF ELSE BEGIN
-           monfile = sim.errcovdir+$
-                     'inv_errorcovariance_stations_wm_mismatchonly_'+sn+'_'+$
-                     sim.name+'_'+syear[ij]+mon[im]+'.dat'       
-           IF keyword_set(sim.nobg) THEN $
-              monfile = sim.errcovdir+$
-                        'inv_errorcovariance_stations_wm_mismatchonly_nobg_'+sn+$
-                        '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
-           IF keyword_set(sim.special) THEN $
-              monfile = sim.errcovdir+$
-                        'inv_errorcovariance_stations_wm_mismatchonly_special_'+sn+$
-                        '_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'                                   
-        ENDELSE
+        monfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_'+$
+                  suffix+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
+
         openw,lun,monfile,/get_lun
         printf,lun,'STN    SIG_ALL'
         FOR i=0,nc-1 DO BEGIN

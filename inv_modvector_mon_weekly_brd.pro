@@ -13,7 +13,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;      inv_modvector_mon_weekly_brd,sim,plot=plot
+;      inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
 ;
 ;
 ; INPUTS:
@@ -23,6 +23,7 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
+;       /dlr              : set this keyword to process DLR model output
 ;       /plot             : set keyword to plot comparisons of model and observation
 ;                           time series
 ;
@@ -53,16 +54,17 @@
 ;    CSP 16 April 2012
 ;    Originally called read_weekly_model_data_all.pro
 ;    
-;    Dominik Brunner, 5 Feb 2017:
+;    Dominik Brunner (DB), 5 Feb 2017:
 ;      Major rewrite and strong simplification of this routine and its subroutines
 ;      Renamed to inv_modvector_mon_weekly_brd.pro as its observation
 ;      counterpart inv_obsvector_mon_weekly_brd.pro
+;    DB, 3 Dec 2017: added option to process DLR data
 ;-
 
 ;******************************************************
 ;* MAIN PROGRAM
 ;******************************************************
-PRO inv_modvector_mon_weekly_brd,sim,plot=plot
+PRO inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
 
   from = fix(STRMID(sim.syyyymm,0,4))
   to   = fix(STRMID(sim.eyyyymm,0,4))
@@ -81,6 +83,8 @@ PRO inv_modvector_mon_weekly_brd,sim,plot=plot
   nall     = nyears*nmonths*31L
   syear    = STRCOMPRESS(string(from+indgen(nyears)),/REM)
 
+  IF keyword_set(plot) THEN load_ctb,'ive.ctb'
+
   ;***************************************
   ;* MAIN LOOP: YEARS
   ;***************************************
@@ -97,7 +101,7 @@ PRO inv_modvector_mon_weekly_brd,sim,plot=plot
     ;************************************************
     ;* read in corresponding model receptor output
     ;************************************************
-    read_orig_model_data_brd,sim,syear[ij],ch4obs=ch4obs,ch4mod=ch4mod,oldest=oldest
+    read_orig_model_data_brd,sim,syear[ij],ch4obs=ch4obs,ch4mod=ch4mod,dlr=dlr
  
     IF keyword_set(plot) THEN BEGIN
        psdir = '/home/brd134/projects/MAIOLICAII/station_tseries_plots/'

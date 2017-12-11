@@ -1,19 +1,40 @@
 ;; library of support routines for the MAIOLICA-II inverse modelling
 
-FUNCTION emiss_categories,main=main,labels=labels
+FUNCTION emiss_categories,main=main,dlr=dlr,labels=labels
 
   IF keyword_set(main) THEN BEGIN
      cat = ['ANTH','WETL','BB','RICE','TERMITE','OCEAN','VOLC','WILD_anim']
-  ENDIF ELSE BEGIN
-     ;; Florian's version with wrong labelling of wetlands
+  ENDIF ELSE IF keyword_set(dlr) THEN BEGIN
      cat  = ['ANTH_AFR','ANTH_AUS','ANTH_CHIN','ANTH_EU','ANTH_IND','ANTH_MIDEAST','ANTH_NA',$
              'ANTH_OCE','ANTH_RUS','ANTH_SA','ANTH_SE_ASIA','BB_AUS','BB_CHIN',$
              'BB_EU','BB_IND','BB_MID','BB_NAbor','BB_NAtemp','BB_NAFR','BB_RUS',$
              'BB_SAtemp','BB_SAtrop','BB_SE_ASIA','BB_SAFR','RICE_AFR','RICE_ASIA_AUS',$
-             'RICE_CHIN','RICE_EU','RICE_IND','RICE_NA','RICE_SA','WETL_AUS','WETL_EU',$
-             'WETL_MID','WETL_NAbor','WETL_NAFR','WETL_RUS','WETL_SAtemp','WETL_SAFR',$
-             'WETL_CHIN','WETL_IND','WETL_NAtemp','WETL_SAtrop','WETL_SE_ASIA','WILD_anim',$
+             'RICE_CHIN','RICE_EU','RICE_IND','RICE_NA','RICE_SA','WETL_AUS','WETL_CHIN',$
+             'WETL_EU','WETL_IND','WETL_MID','WETL_NAbor','WETL_NAtemp','WETL_NAFR',$
+             'WETL_RUS','WETL_SAtemp','WETL_SAtrop','WETL_SE_ASIA','WETL_SAFR','WILD_anim',$
              'TERMITES','OCEAN','VOLC']
+     nanth=11 & nbb=13 & nwet=13 & nrice=7
+     ;; variable names in model receptor output
+     labels = ['A'+strcompress(indgen(nanth)+1,/rem),'B'+strcompress(indgen(nbb)+1,/rem),$
+               'R'+strcompress(indgen(nrice)+1,/rem),'W'+strcompress(indgen(nwet)+1,/rem),$
+               'WAN','TER','OCE','VOL']
+     nanth=11 & nbb=13 & nwet=13 & nrice=7
+     anth = string(indgen(nanth)+1,format='(i2.2)')
+     bb = ['12','13','14','15','19','16','18','17','20','22','23','24','21']
+     rice =  string(indgen(nrice)+26,format='(i2.2)')
+     wet = ['35','36','37','38','39','40','42','41','43','45','46','47','44']
+     other = ['48','33','25','34'] ; WAN, TER, OCE, VOL
+     labels = 'tracer_gp_CH4_fx_e'+[anth,bb,rice,wet,other]
+  ENDIF ELSE BEGIN
+     ;; Florian's version with wrong labelling of wetlands
+     ;cat  = ['ANTH_AFR','ANTH_AUS','ANTH_CHIN','ANTH_EU','ANTH_IND','ANTH_MIDEAST','ANTH_NA',$
+     ;        'ANTH_OCE','ANTH_RUS','ANTH_SA','ANTH_SE_ASIA','BB_AUS','BB_CHIN',$
+     ;        'BB_EU','BB_IND','BB_MID','BB_NAbor','BB_NAtemp','BB_NAFR','BB_RUS',$
+     ;        'BB_SAtemp','BB_SAtrop','BB_SE_ASIA','BB_SAFR','RICE_AFR','RICE_ASIA_AUS',$
+     ;        'RICE_CHIN','RICE_EU','RICE_IND','RICE_NA','RICE_SA','WETL_AUS','WETL_EU',$
+     ;        'WETL_MID','WETL_NAbor','WETL_NAFR','WETL_RUS','WETL_SAtemp','WETL_SAFR',$
+     ;        'WETL_CHIN','WETL_IND','WETL_NAtemp','WETL_SAtrop','WETL_SE_ASIA','WILD_anim',$
+     ;        'TERMITES','OCEAN','VOLC']
      ;; correct version
      cat  = ['ANTH_AFR','ANTH_AUS','ANTH_CHIN','ANTH_EU','ANTH_IND','ANTH_MIDEAST','ANTH_NA',$
              'ANTH_OCE','ANTH_RUS','ANTH_SA','ANTH_SE_ASIA','BB_AUS','BB_CHIN',$
@@ -231,5 +252,156 @@ PRO get_week,yyyymmdd,leap=leap,wmin=wmin,wmax=wmax,wcenter=wcenter,iscenter=isc
 
   wmin = wmin[index[0]] & wmax = wmax[index[0]] & wcenter = wcenter[index[0]]
   iscenter = wcenter EQ dtg
+
+END
+
+;-----------------------------------------------------------------------------
+
+FUNCTION get_sim_dates,sim
+
+  ;; get dates (months) of the simulation
+  syyyy    = fix(strmid(sim.syyyymm,0,4)) & smm = fix(STRMID(sim.syyyymm,4,2))
+  eyyyy    = fix(strmid(sim.eyyyymm,0,4)) & emm = fix(STRMID(sim.eyyyymm,4,2))
+  nyear    = eyyyy-syyyy+1
+  n        = eyyyy*12L+emm-(syyyy*12L+smm)+1 ; number months in inversion
+  yyyymm   = StrArr(n)
+  cnt = 1
+  FOR i=0,n-1 DO BEGIN
+     im = i + smm - 1
+     yyyy = STRING(syyyy + round(im/12),format='(i4)')
+     mm = STRING(im MOD 12 + 1,format='(i2.2)')
+     yyyymm[i] = yyyy+mm
+  ENDFOR
+  
+  RETURN,yyyymm
+
+END
+
+
+;-----------------------------------------------------------------------------
+
+FUNCTION station_mapping_empa2dlr,empaid
+;+
+;  Map station IDs used by Empa onto those used by DLR
+;-
+
+  ;; map an Empa station ID to a DLR station ID  
+  CASE strupcase(empaID) OF
+     'ALT': dlrid='ALE' 
+     'MHD': dlrid='MAC'         ; Mace Head
+     'MLO': dlrid='MAU'         ; Mauna Loa
+     'RPB': dlrid='RAG'
+     'SMO': dlrid='?missing?'
+     'THD': dlrid='TRI'
+     'WSA': dlrid='SAB'         ; Sable Island
+     'CGO': dlrid='CPG'         ; Cape Grim
+     'IZO': dlrid='IZA'
+     'PAL': dlrid='PSA'
+     'ICE': dlrid='?missing?'
+     'SIS': dlrid='?missing?'
+     'CBA': dlrid='COL'
+     'SHM': dlrid='SHI'         ; Shemya Islan; Florian used SHE (Shetland?)
+     'OXK': dlrid='OCH'
+     'LPO': dlrid='ILE'
+     'ESP': dlrid='EST'
+     'HPB': dlrid='HOH'
+     'HUN': dlrid='HEG'
+     'LEF': dlrid='PAR'
+     'AMT': dlrid='?missing?'
+     'BSC': dlrid='BLA'
+     'KZD': dlrid='SAR'
+     'UUM': dlrid='ULA'
+     'PDM': dlrid='PIC'
+     'BGU': dlrid='BEG'
+     'NWR': dlrid='NIW'
+     'UTA': dlrid='WEN'
+     'AZR': dlrid='TCI'
+     'PTA': dlrid='POI'
+     'TAP': dlrid='TAE'
+     'WLG': dlrid='MTW'
+     'BMW': dlrid='TUD'
+     'BME': dlrid='STD'
+     'WKT': dlrid='MOO'
+     'WIS': dlrid='SED'
+     'ASK': dlrid='ASS'
+     'LLN': dlrid='LUL'
+     'KUM': dlrid='CPK'
+     'CRI': dlrid='CPR'
+     'GMI': dlrid='GUA'
+     'ABP': dlrid='ARE'
+     'MKN': dlrid='MTK'
+     'SEY': dlrid='MAH'
+     'CFA': dlrid='CPF'
+     'NMB': dlrid='GLO'
+     'EIC': dlrid='EAS'
+     'AMS': dlrid='AMS'
+     'MAA': dlrid='MAW'
+     'ARH': dlrid='ARR'
+     'BHD': dlrid='BAR'
+     'CRZ': dlrid='CRO'
+     'MQA': dlrid='MQI'         ; Macquarie Island; Florian used MAC
+     'TDF': dlrid='TIE'
+     'PSA': dlrid='PST'
+     'CYA': dlrid='CAS'
+     'HBA': dlrid='HAL'
+     'LMP': dlrid='LAM'
+     'BEGUR': dlrid='BEG'
+     'ILEGRANDE': dlrid='ILE'
+     ELSE: dlrid = strupcase(empaid)
+  ENDCASE
+  
+  RETURN,dlrid
+END
+
+
+;---------------------------------------------------------------------
+
+FUNCTION read_receptor_list
+;+
+;  Get list of receptor points at which FLEXPART output was written for
+;  the MAIOLICA-2 simulations.
+;  The routine returns a structure with receptor point name and coordinates.
+;  Note that for elevated stations, output was generated for several heights
+;  above ground.
+;-
+
+  ;; attention, file 199001 contains 347 receptors, but all files starting
+  ;; with 199002 have 341 receptors
+  file ='/project/arf/nas/output/final_sim01/19900201/receptor_pptv.nc'
+  ncid = ncdf_open(file)
+  
+  dimyid=ncdf_dimid(ncid,'rec')
+  ncdf_diminq,ncid,dimyid,name,nrcpt
+  dimtid=ncdf_dimid(ncid,'pnt')
+  ncdf_diminq,ncid,dimtid,name,npnt
+  dimtid=ncdf_dimid(ncid,'age')
+  ncdf_diminq,ncid,dimtid,name,nage
+
+  ncdf_varget,ncid,'rec',rec
+  ncdf_varget,ncid,'pnt',pnt
+  ncdf_varget,ncid,'age',age
+  ncdf_varget,ncid,'receptorname',receptorname
+  ncdf_varget,ncid,'lon',lon
+  ncdf_varget,ncid,'lat',lat
+  ncdf_varget,ncid,'lev',lev
+  ncdf_varget,ncid,'hx',hx
+  ncdf_varget,ncid,'hy',hy
+  ncdf_varget,ncid,'hz',hz
+  ncdf_close,ncid
+
+  names = string(receptorname)
+  
+  rec = {name:'',lon:0.,lat:0.,lev:0.,hx:0.,hy:0.,hz:0.}
+  receptors=replicate(rec,nrcpt)
+  FOR i=0,nrcpt-1 DO BEGIN
+     receptors[i].name=names[i]
+     receptors[i].lon=lon[i]
+     receptors[i].lat=lat[i]
+     receptors[i].lev=lev[i]
+     receptors[i].hx=hx[i]
+     receptors[i].hy=hy[i]
+     receptors[i].hz=hz[i]
+  ENDFOR
+  RETURN,receptors
 
 END

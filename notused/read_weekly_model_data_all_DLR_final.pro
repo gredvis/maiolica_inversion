@@ -208,11 +208,11 @@ filein  = '/home/arf/pers/IDL/urmel/INVERSION/choice_modellevel_station_DLR_'+sn
       IF cout gt 0L THEN BEGIN
         indstat  = WHERE(stats[i] eq station,cstat)
         mlevel = mlev[indstat]    
-        cout1      = n_elements(data.pptv[0,ind[mlevel]])     ; cout1 : consider data at one output level only 
+        cout1      = n_elements(data.ppb[0,ind[mlevel]])     ; cout1 : consider data at one output level only 
         FOR it=0,cout1-1 DO mch4collect[it+tcoll[i],i] = $
-        total(data[it].pptv[1:ntot,ind[mlevel]]);/data[it].pptv[0,ind[mlevel]]
+        total(data[it].ppb[1:ntot,ind[mlevel]]);/data[it].ppb[0,ind[mlevel]]
         FOR it=0,cout1-1 DO FOR itra=0,ntot-1 DO mtracollect[it+tcoll[i],itra,i] = $
-        data[it].pptv[itra+1,ind[mlevel]];/data[it].pptv[0,ind[mlevel]]
+        data[it].ppb[itra+1,ind[mlevel]];/data[it].ppb[0,ind[mlevel]]
         ntime      = cout1
         tcoll[i]  += cout1
       ENDIF ELSE BEGIN
@@ -234,23 +234,20 @@ filein  = '/home/arf/pers/IDL/urmel/INVERSION/choice_modellevel_station_DLR_'+sn
           IF clon gt 0L and clat gt 0L THEN BEGIN
             intersect = setintersection(indlon,indlat) ; intersect of modelled lats and lons
             mname     = info[intersect].rcptname       ; search model station name
-            clatlon   = n_elements(data.pptv[0,intersect])     ; cout1 : consider data at one output level only
+            clatlon   = n_elements(data.ppb[0,intersect])     ; cout1 : consider data at one output level only
             FOR it=0,clatlon-1 DO $
-           mch4collect[tcoll[i]+it,i] = total(data[it].pptv[1:ntot,intersect]);/data[it].pptv[0,intersect]
+           mch4collect[tcoll[i]+it,i] = total(data[it].ppb[1:ntot,intersect]);/data[it].ppb[0,intersect]
             FOR it=0,clatlon-1 DO FOR itra=0,ntot-1 DO $
-            mtracollect[tcoll[i]+it,itra,i] = data[it].pptv[itra+1,intersect];/data[it].pptv[0,intersect]           
+            mtracollect[tcoll[i]+it,itra,i] = data[it].ppb[itra+1,intersect];/data[it].ppb[0,intersect]           
             tcoll[i] += clatlon
           ENDIF ELSE BEGIN
             print, 'Station ', stats, ' not in model output list! => STOP '
             stop
           ENDELSE
-        ENDIF       ; endif station needs to be searched by lat/lon identifyers
-      ENDELSE       ; endif station is found in recname or by lat/lon identifyers
+       ENDIF                    ; endif station needs to be searched by lat/lon identifyers
+     ENDELSE                    ; endif station is found in recname or by lat/lon identifyers
     
-   ENDFOR
-;stop 
-         ; end loop over stations stats
-;stop
+   ENDFOR                       ; end loop over stations stats
 
   ENDFOR            ; end loop over months in year syear
   

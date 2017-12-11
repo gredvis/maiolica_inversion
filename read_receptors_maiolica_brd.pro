@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   READ_receptors_maiolica
+;  read_receptors_maiolica_brd
 ;
 ; PURPOSE:
 ;
@@ -17,7 +17,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   read_receptors_urmel,sim,yyyymm,info=info,data=data
+;   read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
 ;
 ; INPUTS:
 ;
@@ -35,11 +35,11 @@
 ;           {rcptname:'',xrcpt:0.,yrcpt:0.,zrcpt:0.,hxmax:0.,hymax:0.,hzmax:0.,time:0}
 ;           containing name and coordinates of receptor point and number of time points
 ;    data: structure array of length ntime (number of time points) of type
-;           {pptv:DblArr(nspec,nrcpt),std:DblArr(nspec,nrcpt),avgnum:DblArr(nrcpt),$
+;           {ppb:DblArr(nspec,nrcpt),std:DblArr(nspec,nrcpt),avgnum:DblArr(nrcpt),$
 ;           kernweights:DblArr(nrcpt)}
 ;           containing the actual concentrations for the nspec different species
 ;           at the nrcpt different receptor points.
-;    dtg:  the output date/times (YYYYMMDDhhmm), centered on midday (UTC)
+;    dtg:   the output date/times (YYYYMMDDhhmm), centered on midday (UTC)
 ;
 ; COMMON BLOCKS:
 ;
@@ -138,7 +138,7 @@ PRO read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
   rec = {rcptname:'',xrcpt:0.,yrcpt:0.,zrcpt:0.,hxmax:0.,hymax:0.,hzmax:0.,time:0}
   info  = replicate(rec,nstat)
 
-  rec  = {pptv:DblArr(nspec,nstat),std:DblArr(nspec,nstat),avgnum:DblArr(nstat),$
+  rec  = {ppb:DblArr(nspec,nstat),std:DblArr(nspec,nstat),avgnum:DblArr(nstat),$
           kernweights:DblArr(nstat)}
   data = replicate(rec,ntime)
 
@@ -171,7 +171,7 @@ PRO read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
   ncdf_varget,ncid,'xk_Air_tracer',xk_Air_tracer
   ncdf_varget,ncid,'sd_Air_tracer',sd_Air_tracer
 
-  data.pptv[0,*]=reform(Air_tracer[statind,0,0,*],1,nstat,ntime)
+  data.ppb[0,*]=reform(Air_tracer[statind,0,0,*],1,nstat,ntime)
   data.std[0,*]=reform(sd_Air_tracer[statind,0,0,*]/16.,1,nstat,ntime)
   data.avgnum=reform(nn_Air_tracer[statind,0,0,*],nstat,ntime)
   data.kernweights=reform(xk_Air_tracer[statind,0,0,*],nstat,ntime)
@@ -186,8 +186,8 @@ PRO read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
         ncdf_varget,ncid,varname,var
         varname = 'sd_'+varname
         ncdf_varget,ncid,varname,sdvar
-        data.pptv[i*sim.ntrace+j+1L,*]=reform(var[statind,0,0,*],1,nstat,ntime)/data.pptv[0,*]*1e9
-        data.std[i*sim.ntrace+j+1L,*]=reform(sdvar[statind,0,0,*]/16.,1,nstat,ntime)/data.pptv[0,*]*1e9
+        data.ppb[i*sim.ntrace+j+1L,*]=reform(var[statind,0,0,*],1,nstat,ntime)/data.ppb[0,*]*1e9
+        data.std[i*sim.ntrace+j+1L,*]=reform(sdvar[statind,0,0,*]/16.,1,nstat,ntime)/data.ppb[0,*]*1e9
      ENDFOR
   ENDFOR
 
