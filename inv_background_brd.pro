@@ -22,7 +22,7 @@
 ;        M31(i-1,k) = CH4 mass of 3rd age class at the end of month i-1
 ;        M40(i,k)   = CH4 mass of 4th age class at the beginning of month i        
 ;        fs(i-3,k)  = sp(i-3,k)/sa(i-3,k), sp = aposteriori emissions,
-;                     sa = apriori emissions of k-th category  in month i-3,
+;                     sa = apriori emissions of k-th category in month i-3,
 ;                     sp determined from inversion
 ;
 ;   For the first three months, when fs is not determined yet, fs is

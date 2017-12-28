@@ -23,7 +23,8 @@
 ;   run     : the inversion configuration name
 ;             The latest configuations used by Florian were 'NEW_DLR' and '22.4'
 ;   sconfig : The station configuration, options are 'flask', 'all', 'special', 'flask_DLR2'
-;   /dlr    : Set this keyword to set paths for DLR data processing
+;   /dlr    : Set this keyword to set paths for DLR data processing and to
+;             activate the dlr flag in the configuration structure.
 ;
 ; OUTPUTS:
 ;
@@ -31,6 +32,11 @@
 ;   RETURN VALUE:   Simulation structure
 ;  sim = {name:name,$                       ; simulation name, e.g. 'final_sim01'
 ;         sconfig:sconfig,$                 ; station configuration, e.g. 'flask'
+;         sn,$                              ; string 'NNstats' with NN number of stations 
+;                                           ; used for file names
+;         qunc:qunc,$                       ; string 'optUU.U' with total a priori uncertainty
+;                                           ; used for file names 
+;         dlr:dlr,$                         ; =0 for FLEXPART, =1 for DLR output processing
 ;         obsdir:obsdir,$                   ; directory of pre-processed obs data
 ;         modeldir:modeldir,$               ; base directory of FLEXPART model output
 ;                                           ; model output will be in modeldir/name
@@ -39,16 +45,15 @@
 ;         syyyymm:syyyymm,eyyyymm:eyyyymm,$ ; start and end month of inversion
 ;         scaleq:scaleq,$                   ; uncertainty scaling factors per category
 ;         ntrace:ntrace,nage:nage,$         ; number of tracer (48) and age classes (5)
-;         stats:stats,ufact:ufact,$         ; list of stations and uncertainy scalings
+;         stats:stats,ufact:ufact,$         ; list of stations and uncertainy scaling factors
+;         stat_levs:levs,$                  ; altitude levels at which FLEXPART is evaluated
 ;         flask:flask,$                     ; =1 if only flask sites are included
 ;         special:special,$                 ; =1 if 'special' site list is selected
-;         bkt:bkt,$                         ; =1 if station BKT should be excluded
 ;         nobg:nobg,$                       ; =1 if only non-background data should be used
 ;         statfilt:statfilt,$               ; list of sites to be filtered 
 ;         brw:brw,$                         ; =1 use non-background data only at Barrow
 ;         weekly:weekly,$                   ; =1 to aggregate to weekly observation
 ;         keeppos:keeppos,$                 ; =1 to use log of emissions for positive solutions
-;         fcorr_glob:fcorr_glob,$           ; =1 if a single glocal scaling factor is applied
 ;         startcf:startcf}                  ; list of initial scaling factors
 ;
 ; COMMON BLOCKS:
@@ -107,7 +112,6 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
 
   ntrace = 48                                            ; number of tracers
   nage = 5                                               ; number of age classes
-  fcorr_glob   = 0                                       ; global correction factor (1) or factors per category (0) 
   weekly  = 1                                            ; use weekly means of observational and model data
   keeppos = 1                                            ; take the logarithm of the emissions  
   nobg = 0                                               ; use only non-background values (always set to 0!)
@@ -119,8 +123,6 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   flask   = strpos(sconfig,'flask') NE -1
   special = strpos(sconfig,'special') NE -1
 
-  ; w/o BKT station
-  bkt     = 0
   
   ; non-background conditions only where available
   statfilt = ['brw']
@@ -178,13 +180,29 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
                 0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.40,0.40,$
                 0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.4,0.4,0.4,0.4]
      END
+     '25.1': BEGIN
+        ;; Test of Dominik, xhishquare about 1.4 when using ufact[*] = 0.6
+        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.60,0.60,0.60,0.60,0.60,$
+                0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,$
+                0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.50,0.50,0.50,0.50]
+     END
+     '28.4': BEGIN
+        ;; Xhisquare about 1.0 when using ufact[*] = 0.68
+        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.70,0.70,0.70,0.70,0.70,$
+                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,$
+                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50]
+     END
      '32.8': BEGIN
-        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 
-        ;; apriori uncert from litterature, taking into account diff regions and also 
-        ;; fact that we optimize each month 4 times 32.8000
+        ;; Xhisquare about 1.0 when using ufact[*] = 0.68
         scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.80,0.80,0.80,0.80,0.80,$
-                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,$
                 0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]
+     END
+     '65.6': BEGIN
+        ;; Xhisquare about 1.0 when using ufact[*] = 0.68
+        scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,$
+                0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]*2
      END
      'all_flask_large_uncert': BEGIN
         ;;keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori uncert large
@@ -324,6 +342,9 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
   IF NOT ok THEN RETURN,-1
 
+  IF run EQ '25.1' THEN ufact = ufact * 0.6
+  IF run EQ '28.4' OR run EQ '32.8' OR run EQ '65.6' THEN ufact = ufact * 0.68
+
   ;; get optimal FLEXPART receptor output levels for these sites
   station_rcpt_levs,stats,levs=levs
 
@@ -331,55 +352,56 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   print, 'Run inversion with ', sn, ' stations'
 
   ;; initial scaling factors
-  IF keyword_set(fcorr_glob) THEN BEGIN
-     startcf = 1.0325924 
-  ENDIF ELSE BEGIN
-     ;;startcf = FltArr(48) + 1.  ; initial test
-     ;;startcf[*] = 1/0.98871541  ; first global scaling
-     ;;startcf[*] =1.0275         ; 2nd global scaling
 
-     ;;; first scaling per category
-     ;;startcf = [1.00000,1.00000,1.00000,1.00000,1.04629,1.04930,1.00000,1.00000,$
-     ;;          1.00000,1.00000,1.17080,1.00000,1.02708,1.00000,1.05412,1.00132,$
-     ;;          1.04544,1.21240,1.06390,1.00000,1.24261,0.955105,1.11636,1.00000,$
-     ;;          1.09041,1.00000,1.00000,1.03611,0.939701,1.09191,1.00000,0.909144,$
-     ;;          1.00000,1.00000,1.39767,1.05893,1.03421,1.00000,0.907644,1.09670,$
-     ;;          1.00000,1.00000,1.00000,1.00000,1.08723,1.00000,1.00000,1.00000]
+  ;;startcf = FltArr(48) + 1.  ; initial test
+  ;;startcf[*] = 1/0.98871541  ; first global scaling
+  ;;startcf[*] =1.0275         ; 2nd global scaling
+  
+  ;; first scaling per category
+  ;;startcf = [1.00000,1.00000,1.00000,1.00000,1.04629,1.04930,1.00000,1.00000,$
+  ;;          1.00000,1.00000,1.17080,1.00000,1.02708,1.00000,1.05412,1.00132,$
+  ;;          1.04544,1.21240,1.06390,1.00000,1.24261,0.955105,1.11636,1.00000,$
+  ;;          1.09041,1.00000,1.00000,1.03611,0.939701,1.09191,1.00000,0.909144,$
+  ;;          1.00000,1.00000,1.39767,1.05893,1.03421,1.00000,0.907644,1.09670,$
+  ;;          1.00000,1.00000,1.00000,1.00000,1.08723,1.00000,1.00000,1.00000]
 
-     ;; scaling factors at the end of 1991
-     ;; 0.991477 0.998450 0.972916 0.971567 0.974735 0.989856 0.976809 0.994048 0.995995  1.05789
-     ;; 0.986327  1.02056 0.991524 0.993904 0.996534  1.00001  1.00663 0.993243 0.978914 0.998782
-     ;; 1.20031  1.09269 0.984832 0.972935 0.997707 0.966160 0.977547 0.999849 0.961963 0.997453
-     ;; 0.991012 0.980430 0.968409 0.987643 0.962847 0.996981 0.938558 0.935513 0.968860  1.03806
-     ;; 1.77183 0.917666 0.936982 0.975773 0.998232 0.982960  1.07199 0.914840
+  ;; scaling factors at the end of 1991
+  ;; 0.991477 0.998450 0.972916 0.971567 0.974735 0.989856 0.976809 0.994048 0.995995  1.05789
+  ;; 0.986327  1.02056 0.991524 0.993904 0.996534  1.00001  1.00663 0.993243 0.978914 0.998782
+  ;; 1.20031  1.09269 0.984832 0.972935 0.997707 0.966160 0.977547 0.999849 0.961963 0.997453
+  ;; 0.991012 0.980430 0.968409 0.987643 0.962847 0.996981 0.938558 0.935513 0.968860  1.03806
+  ;; 1.77183 0.917666 0.936982 0.975773 0.998232 0.982960  1.07199 0.914840
+  
+  ;; finally used (corresponds to scaling factors at the end of 1992
+  ;;     startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
+  ;;                0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,1.00000,$
+  ;;                1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
+  ;;                0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
+  ;;                0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
+  ;;                2.27135,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
+  startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
+             0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,0.6,$
+             1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
+             0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
+             0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
+             1.0,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
+  startcf[*] = 1.0
+  ;; BB North America overestimated
+  ;;startcf[16]=0.6
 
-     ;; finally used (corresponds to scaling factors at the end of 1992
-;     startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
-;                0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,1.00000,$
-;                1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
-;                0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
-;                0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
-;                2.27135,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
-     startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
-                0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,0.6,$
-                1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
-                0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
-                0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
-                1.0,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
-     ;; BB North America overestimated
-     startcf[16]=0.6
-     IF keyword_set(dlr) THEN BEGIN
-        startcf[*]=1.*1800./1700.
-     ENDIF
-  ENDELSE
+  sn   = STRCOMPRESS(string(fix(n_elements(stats))),/REM)+'stats'
+  qunc = 'opt'+STRCOMPRESS(string(total(scaleq)),/REM)
 
-  sim = {name:name,$
-         sconfig:sconfig,$
-         basedir:basedir,$
-         obsdir:obsdir,$
-         moddir:moddir,$
-         errcovdir:errcovdir,$
-         outdir:outdir,$
+  sim = {name:name,$            ; simulation name, e.g. '25.1'
+         sconfig:sconfig,$      ; station configuration, e.g. 'flask', 'all'
+         sn:sn,$                ; string 'NNstats' with NN number of stations used for file names
+         qunc:qunc,$            ; string 'optUU.U' with total a priori uncertainty used for file names 
+         dlr:keyword_set(dlr),$ ; flag for DLR output
+         basedir:basedir,$      ; base directory of inversion output
+         obsdir:obsdir,$        ; directory of pre-processed weekly observation data
+         moddir:moddir,$        ; directory of pre-processed weekly model data
+         errcovdir:errcovdir,$  ; directory with diagnonal elements of model-data mismatch uncert
+         outdir:outdir,$        ; results directory
          modeldir:modeldir,$
          wdcggdir:wdcggdir,$
          hdir:hdir,$
@@ -388,11 +410,12 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
          ntrace:ntrace,nage:nage,$
          weekly:weekly,$
          keeppos:keeppos,$
-         stats:stats,ufact:ufact,stat_levs:levs,$
+         ;; station names, uncertainty scaling factors, and altitude levels
+         stats:stats,$
+         ufact:ufact,$
+         stat_levs:levs,$
          flask:flask,$
          special:special,$
-         bkt:bkt,$
-         fcorr_glob:fcorr_glob,$
          nobg:nobg,$
          statfilt:statfilt,$
          brw:brw,$

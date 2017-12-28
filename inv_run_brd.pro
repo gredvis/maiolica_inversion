@@ -20,8 +20,8 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
-;            serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
+;  inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,$
+;            serzlen=serzlen,rapriori=rapriori,$
 ;            sernobse=sernobse
 ;
 ;
@@ -44,9 +44,7 @@
 ;       Sp (FltArr, ntrace): aposteriori monthly emissions estimates for the month of 
 ;                            simulation
 ;       serdllh (Fltarr)   : time series log-likelihood
-;       sumdllh            : accumulated log-likelihood
 ;       serzlen (Fltarr)   : time series chi-square statistics
-;       sumzlen            : accumulated chi-square statistics
 ;       sernobse           : time series of number of observations per month
 ;             
 ; COMMON BLOCKS:
@@ -69,11 +67,9 @@
 ; FA 2015
 ; BRD 19 Nov 2017, call adjusted/simplified for new structure of sim
 ;-
-PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
-                serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
-                sernobse=sernobse,dlr=dlr
+PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,$
+                serzlen=serzlen,rapriori=rapriori,sernobse=sernobse
 
-  sn = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'
   sstart = STRCOMPRESS(string(sim.startcf),/REM)
   print, 'start scaling factors = ', sstart
 
@@ -104,14 +100,13 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
   serzlen   = DblArr(n)                       ; time series chi-square statistics
   sernobse  = DblArr(n)                       ; time series nobs
   serdllh   = DblArr(n)                       ; time series log likelihood statistics
-  sumzlen   = 0.D
-  sumdllh   = 0.D
   em3_apost = DblArr(sim.ntrace)              ; posterior emissions month i-3
 
   irun     = 0
 
   print, 'run inversion with uncertainty parameters for all tracers: '
-  print, sim.scaleq
+  cats = emiss_categories(labels=labels)
+  print,string(labels,format='(a4)')+': '+string(sim.scaleq,format='(f6.1)')
 
   ;; loop over all months of the inversion period
   cyyyymm = sim.syyyymm
@@ -124,7 +119,8 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
      
      ;; save final a posteriori emissions for month i-3
      IF i GE nopt THEN BEGIN
-       IF keyword_set(sim.keeppos) THEN em3_apost[*] = exp(Spsave[i-nopt,*]) ELSE em3_apost[*] = Spsave[i-nopt,*]
+       IF keyword_set(sim.keeppos) THEN em3_apost[*] = exp(Spsave[i-nopt,*]) ELSE $
+          em3_apost[*] = Spsave[i-nopt,*]
        ind = WHERE(finite(em3_apost) eq 0,c)
        IF c gt 0L THEN stop
      ENDIF
@@ -136,13 +132,11 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
                                    em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
                                    Spout=Spout,Qpout=Qpout,Saout=Saout,Hdump=Hdump,$
                                    zlen=zlen,dllh=dllh,$
-                                   rapriori=rapriori,nobse=nobse,dlr=dlr
+                                   rapriori=rapriori,nobse=nobse
 
      serzlen[i] = zlen
      serdllh[i] = dllh
      sernobse[i] = nobse
-     IF finite(zlen) eq 1 THEN sumzlen += zlen
-     IF finite(dllh) eq 1 THEN sumdllh += dllh
 
      ;; store current state and error covariance  
      fsave[i,*] = fcorr
@@ -237,26 +231,26 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
      uncert[i] = sqrt(step)/1.e9
   ENDFOR
 
-  qunc = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
-  
   IF keyword_set(rapriori) THEN BEGIN
-     testfile = sim.outdir+'inv_output_weekly_prelim_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'.txt'          
+     testfile = sim.outdir+'inv_output_weekly_prelim_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                sim.eyyyymm+'_'+sim.qunc+'.txt'          
      IF keyword_set(sim.flask) THEN $
-        testfile = sim.outdir+'inv_output_weekly_flask_prelim_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'.txt' 
+        testfile = sim.outdir+'inv_output_weekly_flask_prelim_'+sim.sn+'_'+sim.name+'_'+$
+                   sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'.txt' 
      IF keyword_set(sim.special) THEN BEGIN
-        testfile = sim.outdir+'inv_output_weekly_prelim_special_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                   sim.eyyyymm+'_'+qunc+'.txt'
+        testfile = sim.outdir+'inv_output_weekly_prelim_special_'+sim.sn+'_'+sim.name+'_'+$
+                   sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'.txt'
      ENDIF             
   ENDIF ELSE BEGIN
      IF keyword_set(sim.flask) THEN BEGIN
-        testfile = sim.outdir+'inv_output_weekly_flask_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                   sim.eyyyymm+'_'+qunc+'.txt' 
+        testfile = sim.outdir+'inv_output_weekly_flask_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                   sim.eyyyymm+'_'+sim.qunc+'.txt' 
      ENDIF ELSE BEGIN
-        testfile = sim.outdir+'inv_output_weekly_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                   sim.eyyyymm+'_'+qunc+'.txt'        
+        testfile = sim.outdir+'inv_output_weekly_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                   sim.eyyyymm+'_'+sim.qunc+'.txt'        
         IF keyword_set(sim.special) THEN BEGIN          
-           testfile = sim.outdir+'inv_output_weekly_special_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                      sim.eyyyymm+'_'+qunc+'.txt'
+           testfile = sim.outdir+'inv_output_weekly_special_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                      sim.eyyyymm+'_'+sim.qunc+'.txt'
         ENDIF        
      ENDELSE
   ENDELSE
@@ -288,9 +282,11 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
   ENDELSE 
   free_lun,lun
   
-  matrixfile = sim.outdir+'inv_matrix_weekly_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'.txt'
+  matrixfile = sim.outdir+'inv_matrix_weekly_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+               sim.eyyyymm+'_'+sim.qunc+'.txt'
   IF keyword_set(sim.special) THEN $
-     matrixfile = sim.outdir+'inv_matrix_weekly_special_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'.txt'  
+     matrixfile = sim.outdir+'inv_matrix_weekly_special_'+sim.sn+'_'+sim.name+'_'+$
+                  sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'.txt'  
   openw,lun,matrixfile,/get_lun
   printf,lun,Qpsave
   free_lun,lun
@@ -298,23 +294,23 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
   IF NOT keyword_set(rapriori) THEN BEGIN
      IF keyword_set(sim.keeppos) THEN BEGIN
         IF keyword_set(sim.flask) THEN BEGIN
-           covfile = sim.outdir+'inv_covar_flask_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                     sim.eyyyymm+'_'+qunc+'.txt'      
+           covfile = sim.outdir+'inv_covar_flask_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                     sim.eyyyymm+'_'+sim.qunc+'.txt'      
            IF keyword_set(sim.nobg) THEN $
-              covfile = sim.outdir+'inv_covar_flask_nobg_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                        sim.eyyyymm+'_'+qunc+'.txt'
+              covfile = sim.outdir+'inv_covar_flask_nobg_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                        sim.eyyyymm+'_'+sim.qunc+'.txt'
            IF keyword_set(sim.special) THEN $
-              covfile = sim.outdir+'inv_covar_flask_special_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                        sim.eyyyymm+'_'+qunc+'.txt'                  
+              covfile = sim.outdir+'inv_covar_flask_special_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                        sim.eyyyymm+'_'+sim.qunc+'.txt'                  
         ENDIF ELSE BEGIN
-           covfile = sim.outdir+'inv_covar_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                     sim.eyyyymm+'_'+qunc+'.txt'      
+           covfile = sim.outdir+'inv_covar_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                     sim.eyyyymm+'_'+sim.qunc+'.txt'      
            IF keyword_set(sim.nobg) THEN $
-              covfile = sim.outdir+'inv_covar_nobg_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                        sim.eyyyymm+'_'+qunc+'.txt'
+              covfile = sim.outdir+'inv_covar_nobg_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                        sim.eyyyymm+'_'+sim.qunc+'.txt'
            IF keyword_set(sim.special) THEN $
-              covfile = sim.outdir+'inv_covar_special_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                        sim.eyyyymm+'_'+qunc+'.txt'
+              covfile = sim.outdir+'inv_covar_special_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                        sim.eyyyymm+'_'+sim.qunc+'.txt'
         ENDELSE
         openw,lun,covfile,/get_lun
         printf,lun,string(mcovar,format='(f6.3)')
@@ -329,15 +325,16 @@ PRO inv_run_brd,sim,Hdump=Hdump,serdllh=serdllh,sumdllh=sumdllh,$
      ENDIF
   ENDIF
   
-  IF keyword_set(rapriori) THEN xifile=sim.outdir+'xi_statstics_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                                       sim.eyyyymm+'_'+qunc+'_apriori.txt'
+  IF keyword_set(rapriori) THEN xifile=sim.outdir+'xi_statstics_'+sim.sn+'_'+sim.name+'_'+$
+                                       sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_apriori.txt'
   
-  IF NOT keyword_set(rapriori) THEN xifile=sim.outdir+'xi_statstics_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                                           sim.eyyyymm+'_'+qunc+'_.txt'
+  IF NOT keyword_set(rapriori) THEN xifile=sim.outdir+'xi_statstics_'+sim.sn+'_'+sim.name+'_'+$
+                                           sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_.txt'
   
   openw,lun,xifile,/get_lun
   printf,lun,serzlen
   printf,lun,sernobse
+  printf,lun,serdllh
   free_lun,lun    
   
   print, 'End of program: inversion completed.'

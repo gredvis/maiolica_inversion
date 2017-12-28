@@ -640,7 +640,7 @@ NCDF_CLOSE, ncid4
   ;****************************************
   ;; plot results
   ;****************************************
-  load_ctb,'/home/arf/pers/IDL/COLORTABLES/diff3.ctb'
+  load_ctb,'/project/arf/home/arf/pers/IDL/COLORTABLES/diff3.ctb'
  
   CASE lat OF 
     0: np = 'NHextratropics'

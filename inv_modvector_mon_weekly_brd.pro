@@ -13,7 +13,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;      inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
+;      inv_modvector_mon_weekly_brd,sim,plot=plot
 ;
 ;
 ; INPUTS:
@@ -23,7 +23,6 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;       /dlr              : set this keyword to process DLR model output
 ;       /plot             : set keyword to plot comparisons of model and observation
 ;                           time series
 ;
@@ -64,7 +63,7 @@
 ;******************************************************
 ;* MAIN PROGRAM
 ;******************************************************
-PRO inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
+PRO inv_modvector_mon_weekly_brd,sim,plot=plot
 
   from = fix(STRMID(sim.syyyymm,0,4))
   to   = fix(STRMID(sim.eyyyymm,0,4))
@@ -74,9 +73,6 @@ PRO inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
   
   weekly   = 1
                                                        
-  ; number of stations
-  nst      = n_elements(sim.stats)
-  sn       = STRCOMPRESS(nst,/REM)+'stats'  
   nmonths  = 12
   mon      = STRING(indgen(nmonths)+1,format='(i2.2)')
   nyears   = long(to-from+1)
@@ -101,8 +97,16 @@ PRO inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
     ;************************************************
     ;* read in corresponding model receptor output
     ;************************************************
-    read_orig_model_data_brd,sim,syear[ij],ch4obs=ch4obs,ch4mod=ch4mod,dlr=dlr
- 
+    read_orig_model_data_brd,sim,syear[ij],ch4obs=ch4obs,ch4mod=ch4mod
+
+    IF keyword_set(sim.dlr) THEN BEGIN
+       ;; correct for large bias in DLR model output
+       ;; scale up model data by factor 1680./1600 to correct for bias
+       scalef=1680./1600.
+       ch4mod.ch4=ch4mod.ch4*scalef
+       ch4mod.ch4trace=ch4mod.ch4trace*scalef
+    ENDIF
+    
     IF keyword_set(plot) THEN BEGIN
        psdir = '/home/brd134/projects/MAIOLICAII/station_tseries_plots/'
        ;; compare measurement and observation time series
@@ -162,15 +166,15 @@ PRO inv_modvector_mon_weekly_brd,sim,dlr=dlr,plot=plot
     FOR im=0,nmonths-1 DO BEGIN
 
        IF keyword_set(sim.flask) THEN BEGIN  
-          monfile = sim.moddir+'m_allweekly_flask_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'        
+          monfile = sim.moddir+'m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'        
           IF keyword_set(sim.nobg) THEN $
-             monfile  = sim.moddir+'m_allweekly_flask_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'          
+             monfile  = sim.moddir+'m_allweekly_flask_nobg_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'          
        ENDIF ELSE BEGIN
-          monfile = sim.moddir+'m_allweekly_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
+          monfile = sim.moddir+'m_allweekly_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
           IF keyword_set(sim.nobg) THEN $
-             monfile = sim.moddir+'m_allweekly_nobg_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
+             monfile = sim.moddir+'m_allweekly_nobg_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
           IF keyword_set(sim.special) THEN $
-             monfile = sim.moddir+'m_allweekly_special_'+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
+             monfile = sim.moddir+'m_allweekly_special_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
        ENDELSE
        openw,lun,monfile,/get_lun
        WHILE STRMID(ch4mod[ipos].dtg,4,2) EQ mon[im] DO BEGIN

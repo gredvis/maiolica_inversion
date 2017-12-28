@@ -42,7 +42,7 @@
 ;   sa     (DblArr,n,ntrace) : the a priori emissions of the ntrace tracers
 ;                              and n months of simulation
 ;   sp     (DblArr,n,ntrace) : the corresponding a posteriori emissions
-;   fcorr  (DblArr,n,ntrace) : the monthls scaling factors for all ntrace tracers
+;   fcorr  (DblArr,n,ntrace) : the monthly scaling factors for all ntrace tracers
 ;
 ;
 ; OUTPUTS:
@@ -57,7 +57,7 @@
 ;   sa     (DblArr,n,ntrace) : the a priori emissions of the ntrace tracers
 ;                              and n months of simulation
 ;   sp     (DblArr,n,ntrace) : the corresponding a posteriori emissions
-;   fcorr  (DblArr,n,ntrace) : the monthls scaling factors for all ntrace tracers
+;   fcorr  (DblArr,n,ntrace) : the monthly scaling factors for all ntrace tracers
 ;
 ;
 ; COMMON BLOCKS:

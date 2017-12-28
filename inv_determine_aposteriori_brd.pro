@@ -64,7 +64,11 @@
 ;                                        emissions uncertainty
 ;       Saout (FltArr,ntrace)          : a priori emissions of current and previous months
 ;                                        Parameter is both input and output
-;             
+;       zlen                           : Xhisquare statistic, already scaled by number of
+;                                        observations, should therefore be close to 1
+;       dllh                           : log-likelihood
+;       nobse                          : number of observations in this month
+;      
 ; COMMON BLOCKS:
 ;        none
 ;
@@ -87,7 +91,7 @@
 PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
                                   em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
                                   Spout=Spout,Qpout=Qpout,Saout=Saout,Hdump=Hdump,$
-                                  zlen=zlen,dllh=dllh,rapriori=rapriori,nobse=nobse,dlr=dlr
+                                  zlen=zlen,dllh=dllh,rapriori=rapriori,nobse=nobse
 
   minalogemiss = -20D           ; minimum log number when an emission is zero
                                 ; this corresponds to 7.5 x 1e-16 Tg/yr, which is
@@ -97,8 +101,6 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
      RETURN
   ENDIF
   
-  sn = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'
-
   print, 'Run inv_determine_aposteriori for ', sim.name, ' ', yyyymm
 
   ;****************************************************
@@ -233,22 +235,22 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   
   IF keyword_set(Hdump) THEN BEGIN
      IF keyword_set(sim.flask) THEN BEGIN
-        outfile = sim.hdir+'inv_sensitivity_weekly_flask_'+sn+'_'+sim.name+'_'+yyyymm+'.txt'        
+        outfile = sim.hdir+'inv_sensitivity_weekly_flask_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'        
      ENDIF ELSE BEGIN
-        outfile = sim.hdir+'inv_sensitivity_weekly_'+sn+'_'+sim.name+'_'+yyyymm+'.txt'      
+        outfile = sim.hdir+'inv_sensitivity_weekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'      
         IF keyword_set(sim.special) THEN $
-           outfile = sim.hdir+'inv_sensitivity_weekly_special_'+sn+'_'+sim.name+'_'+yyyymm+'.txt'         
+           outfile = sim.hdir+'inv_sensitivity_weekly_special_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'         
      ENDELSE
      openw,lun,outfile,/get_lun  
      printf,lun,sim.ntrace
      printf,lun,nc
      printf,lun,H
      free_lun,lun
-     outfile2 = sim.hdir+'inv_names_weekly_'+sn+'_'+sim.name+'_'+yyyymm+'.txt'
+     outfile2 = sim.hdir+'inv_names_weekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'
      openw,lun,outfile2,/get_lun
      FOR i=0,nc-1 DO printf,lun,ch4obs[i].name
      free_lun,lun
-     outfile3 = sim.hdir+'inv_dates_weekly_'+sn+'_'+sim.name+'_'+yyyymm+'.txt'
+     outfile3 = sim.hdir+'inv_dates_weekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'
      openw,lun,outfile3,/get_lun
      FOR i=0,nc-1 DO printf,lun,ch4obs[i].dtg
      free_lun,lun

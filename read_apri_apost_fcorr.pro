@@ -84,18 +84,16 @@ PRO read_apri_apost_fcorr,sim,sa=sa,sp=sp,fcorr=fcorr,prelim=prelim,qpdiag=qpdia
   ENDIF
 
   ;; read a priori, a posteriori and fcorr fields for whole simulation
-  sn   = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'
-  qunc = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
   IF keyword_set(prelim) THEN sstr = '_prelim' ELSE sstr = ''
   IF keyword_set(sim.flask) THEN BEGIN
-     testfile = sim.outdir+'inv_output_weekly_flask'+sstr+'_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                sim.eyyyymm+'_'+qunc+'.txt'
+     testfile = sim.outdir+'inv_output_weekly_flask'+sstr+'_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                sim.eyyyymm+'_'+sim.qunc+'.txt'
   ENDIF ELSE BEGIN
-     testfile = sim.outdir+'inv_output_weekly'+sstr+'_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                sim.eyyyymm+'_'+qunc+'.txt'  
+     testfile = sim.outdir+'inv_output_weekly'+sstr+'_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                sim.eyyyymm+'_'+sim.qunc+'.txt'  
      IF keyword_set(sim.special) THEN BEGIN
-        testfile = sim.outdir+'inv_output_weekly'+sstr+'_special_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                   sim.eyyyymm+'_'+qunc+'.txt'
+        testfile = sim.outdir+'inv_output_weekly'+sstr+'_special_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                   sim.eyyyymm+'_'+sim.qunc+'.txt'
      ENDIF
   ENDELSE
 

@@ -152,10 +152,9 @@ sim = {name:'final_sim01',$
   ;*************** 
   ; evaluate file
   ;***************  
-  qunc = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
-  testfile = sim.outdir+'inv_output_weekly'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'.txt'
-  testfile = sim.outdir+'inv_output_weekly_flask_69stats_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'_nov12.txt' ;flo
-;testfile = sim.outdir+'inv_output_weekly_91stats_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'_nov12.txt' ;flo
+  testfile = sim.outdir+'inv_output_weekly'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'.txt'
+  testfile = sim.outdir+'inv_output_weekly_flask_69stats_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_nov12.txt' ;flo
+;testfile = sim.outdir+'inv_output_weekly_91stats_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_nov12.txt' ;flo
   
 fhelp    = DblArr(m,sim.ntrace)
   sahelp   = DblArr(m,sim.ntrace)
@@ -335,7 +334,7 @@ IF cat lt 48 THEN BEGIN
 
 
 
-  plotfile = plotdir+'ts_inv_'+sim.name+'_'+name[cat]+'_testaposteriori_'+year+'_'+qunc+'.eps'
+  plotfile = plotdir+'ts_inv_'+sim.name+'_'+name[cat]+'_testaposteriori_'+year+'_'+sim.qunc+'.eps'
   load_ctb,'/home/arf/pers/IDL/GEOP/diff3.ctb'
   open_ps,plotfile,pssize=[20,15],/eps,/color
 

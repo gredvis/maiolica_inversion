@@ -47,29 +47,33 @@
 PRO run_inversion_final,sim=sim,dlr=dlr
 
   ;; basic simulation configuration and directory settings
-;  run = 'NEW_DLR'               ; or '22.4'
-  run = '22.4'
+  ;; run = 'NEW_DLR'
+  ;;run = '22.4'
 
+  ;; larger uncertainties, especially for wetland emissions
   run = '32.8'
+  run = '65.6'
+
+  ;; Dominik with uncert = 0.3 for anthrop, 0.7 for bb, rice, wetl, 0.5 for rest
+  ;; and data-observation uncertainties reduced by factor 0.75
+  ;;run = '28.4'
 
   ;;sconfig = 'flask'             ; options are 'flask', 'all', 'special'
   sconfig = 'flask_DLR2'        ; options are 'flask', 'all', 'special', 'flask_DLR2'
 
   sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
   IF NOT ok THEN RETURN
-  
+
   ;; activate steps
-  step1 = 1   ; step1: read in original obs data and write to monthly files of weekly means
-  step2 = 1   ; step2: read in model receptor output and write to monthly files of weekly means
-  step3 = 1   ; step3: compute model-data mismatch first time
+  step1 = 0   ; step1: read in original obs data and write to monthly files of weekly means
+  step2 = 0   ; step2: read in model receptor output and write to monthly files of weekly means
+  step3 = 0   ; step3: compute model-data mismatch first time
   step4 = 1   ; step4: run preliminary inversion to compute aposteriori model-data mismatch
   step5 = 1   ; step5: compute model-data mismatch second time using aposteriori model data
   step6 = 1   ; step6: run final inversion
   step7 = 0   ; step7: run inv_emissions_ratio to determine model estimate separated into categories
   step8 = 0   ; step8: run plot programs      
   step9 = 0   ; step9: run plot programs 2
-
-  qunc = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
     
   ;************************************************************************
   ; start program chain:
@@ -84,7 +88,7 @@ PRO run_inversion_final,sim=sim,dlr=dlr
 
   ;; 2. compute weekly mean model data and write to monthly files
   IF keyword_set(step2) THEN BEGIN
-     inv_modvector_mon_weekly_brd,sim,dlr=dlr,/plot
+     inv_modvector_mon_weekly_brd,sim,/plot
   ENDIF ELSE BEGIN
      print, 'Skipped step2: computing weekly mean model data'  
   ENDELSE
@@ -103,9 +107,8 @@ PRO run_inversion_final,sim=sim,dlr=dlr
      print, '4. Run preliminary inversion'
      hdump    = 1
      rapriori = 1
-     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,sumdllh=sumdllh,$
-                 serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
-                 sernobse=sernobse,dlr=dlr
+     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,serzlen=serzlen,$
+                 rapriori=rapriori,sernobse=sernobse
   ENDIF ELSE BEGIN
      print, 'Skipped step4: running preliminary inversion to compute aposteriori model-data mismatch'      
   ENDELSE
@@ -124,9 +127,8 @@ PRO run_inversion_final,sim=sim,dlr=dlr
      print, '6. Run final inversion'
      hdump     = 1
      rapriori  = 0              ;1
-     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,sumdllh=sumdllh,$
-                 serzlen=serzlen,sumzlen=sumzlen,rapriori=rapriori,$
-                 sernobse=sernobse
+     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,serzlen=serzlen,$
+                 rapriori=rapriori,sernobse=sernobse
   ENDIF ELSE BEGIN
      print, 'Skipped step6: running final inversion'        
   ENDELSE        
@@ -146,44 +148,26 @@ PRO run_inversion_final,sim=sim,dlr=dlr
   IF keyword_set(step8) THEN BEGIN
   
      print, 'Plotting now ...'
+
+     ;; plot a priori, a posteriori and observed station time series
+     plot_inv_timeseries_brd,sim,/eps
+
+     ;; plot growth rates
+     plot_growth_rates_brd,sim,/eps
      
+     ;; plot xhisquare statistics
+     plot_xhisquare_statistics,sim,/eps
+
      ;; 8. plot anomalies of emissions
-     ;;  flask = 1
-     rel   = 0
-     plot_inv_emissions_anomalies_paper_maiolica_final,sim=sim,stats=stats,flask=flask,rel=rel,nobg=nobg,special=special
-     
-     ;;  rel   = 1
-     ;;  plot_inv_emissions_anomalies_paper,sim=sim,stats=stats,flask=flask,rel=rel,nobg=nobg,special=special
+     ;plot_inv_emissions_anomalies_paper_maiolica_final,sim,rel=0
+     ;plot_inv_emissions_anomalies_paper_maiolica_final,sim,rel=1
   
      ;; unsich = 0
      ;;  plot_inv_testaposteriori_annmean,sim=sim,unsich=unsich,stats=stats  
   
      ;;unsich = 1
-     ;;  plot_inv_testaposteriori_annmean,sim=sim,unsich=unsich,stats=stats    
+     ;;  plot_inv_testaposteriori_annmean,sim=sim,unsich=unsich,stats=stats
+
   ENDIF
- 
- IF keyword_set(step9) THEN BEGIN
-    ;; 9. growth rates  
-    plot_station_methane_categories_MAIOLICA,lat=3
-    ;; 9. plot emissions errors
-    ;; plot_inv_q,sim=sim,stats=stats
-  
-    ;; 10. plot growth rates
-    ;; 10a: NH
-    ;; lat = 0
-    ;; compute_growth_rates_model_categories,sim=sim,lat=lat,dump=dump,stats=stats,flask=flask,nobg=nobg
-  
-    ;; 10b: tropics
-    ;; lat = 1
-    ;; compute_growth_rates_model_categories,sim=sim,lat=lat,dump=dump,stats=stats,flask=flask,nobg=nobg  
-  
-    ;; 10c: SH
-    ;; lat = 2
-    ;; compute_growth_rates_model_categories,sim=sim,lat=lat,dump=dump,stats=stats,flask=flask,nobg=nobg  
-  
-    ;; 10d: global    
-    ;; lat = 3
-    ;; compute_growth_rates_model_categories,sim=sim,lat=lat,dump=dump,stats=stats,flask=flask,nobg=nobg
-  ENDIF
-      
+       
 END

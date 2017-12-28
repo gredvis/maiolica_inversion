@@ -405,3 +405,29 @@ FUNCTION read_receptor_list
   RETURN,receptors
 
 END
+
+
+;; for a given simulation, get the vector of months yyyymm
+FUNCTION get_yyyymm,sim
+
+  IF n_elements(sim) EQ 0 THEN BEGIN
+     message,'parameter sim missing',/continue
+     RETURN,-1
+  ENDIF
+
+  ;; start and end dates of the simulation
+  syyyy    = strmid(sim.syyyymm,0,4) & smm = STRMID(sim.syyyymm,4,2)
+  eyyyy    = strmid(sim.eyyyymm,0,4) & emm = STRMID(sim.eyyyymm,4,2)
+  n        = fix(eyyyy)*12L+fix(emm)-(fix(syyyy)*12L+fix(smm))+1
+  yyyymm   = StrArr(n)
+  
+  ;; loop over the years and months and get observation and model data
+  cyyyymm = syyyy+smm
+  FOR i = 0,n-1 DO BEGIN
+     yyyymm[i] = cyyyymm
+     cyyyymm = STRMID(gvtime2dtg(dtg2gvtime(cyyyymm+'010000')+40),0,6)
+  ENDFOR
+
+  RETURN,yyyymm
+
+END

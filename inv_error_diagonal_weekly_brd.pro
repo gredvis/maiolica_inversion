@@ -79,7 +79,6 @@ PRO inv_error_diagonal_weekly_brd,sim,apost=apost
      RETURN
   ENDIF
 
-  sn   = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'    
   
   from = fix(STRMID(sim.syyyymm,0,4))
   to   = fix(STRMID(sim.eyyyymm,0,4))
@@ -190,7 +189,7 @@ PRO inv_error_diagonal_weekly_brd,sim,apost=apost
   IF sim.nobg THEN suffix = suffix + 'nobg_'
 
   filemean = sim.errcovdir+'inv_errorcovariance_stations_'+suffix+$
-             sn+'_'+sim.name+'_mean.dat' 
+             sim.sn+'_'+sim.name+'_mean.dat' 
 
   ;; write out overall statistics
   openw,lun,filemean,/get_lun
@@ -218,7 +217,7 @@ PRO inv_error_diagonal_weekly_brd,sim,apost=apost
         nc       = n_elements(namec)
         
         monfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_'+$
-                  suffix+sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
+                  suffix+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
 
         openw,lun,monfile,/get_lun
         printf,lun,'STN    SIG_ALL'

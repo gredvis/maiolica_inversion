@@ -72,9 +72,6 @@ PRO read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
      RETURN
   ENDIF
   
-  sn = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'  
-  flask = sim.sconfig EQ 'flask'
-
   suffix = ''
   IF sim.flask THEN suffix = 'flask_'
   IF sim.special THEN suffix = 'special_'
@@ -83,7 +80,7 @@ PRO read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
   ;*******************************
   ;* read data
   ;******************************* 
-  infile = sim.obsdir + 'z_allweekly_' + suffix + sn + '_' + yyyymm + '.dat'
+  infile = sim.obsdir + 'z_allweekly_' + suffix + sim.sn + '_' + yyyymm + '.dat'
   nobs   = FILE_LINES(infile)
 
   rec = {dtg:'',name:'',lon:0.,lat:0.,ch4:0.,numobs:0,type:''}

@@ -47,13 +47,12 @@
 ;*****************************************************************************
 ;SUBROUTINES
 ;*****************************************************************************
-PRO read_data,sim=sim,dir=dir,syear,stats=stats,ch4obs=ch4stat,dtgobs=dtgstat,lonobs=lonstat,$
-              latobs=latstat,nameobs=namestat,numobs=numstat,type=typestat,nobs=nobs,flask=flask
+PRO read_data,sim,ch4obs=ch4stat,dtgobs=dtgstat,lonobs=lonstat,$
+              latobs=latstat,nameobs=namestat,numobs=numstat,type=typestat,nobs=nobs
 
   nmonths = 12
-  nst     = n_elements(stats)
-  sn      = STRCOMPRESS(string(fix(n_elements(stats))),/REM)+'stats'          
 
+  nst = n_elements(sim.stats)
   e = 0 
   a0 = ''
   a1 = '' 
@@ -81,10 +80,10 @@ PRO read_data,sim=sim,dir=dir,syear,stats=stats,ch4obs=ch4stat,dtgobs=dtgstat,lo
     ;* read data
     ;*******************************     
     IF im lt 9 THEN mm = '0'+STRCOMPRESS(string(im+1),/REM) ELSE mm = STRCOMPRESS(string(im+1),/REM)
-    IF keyword_set(flask) THEN BEGIN
-      infile   = dir+'z_allweekly_flask_'+sn+'_'+syear+mm+'.dat' 
+    IF keyword_set(sim.flask) THEN BEGIN
+      infile   = dir+'z_allweekly_flask_'+sim.sn+'_'+syear+mm+'.dat' 
     ENDIF ELSE BEGIN
-      infile   = dir+'z_allweekly_'+sn+'_'+syear+mm+'.dat'
+      infile   = dir+'z_allweekly_'+sim.sn+'_'+syear+mm+'.dat'
     ENDELSE    
     nlines   = FILE_LINES(infile)
 
@@ -141,47 +140,7 @@ END ; of routine read_data per year
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO table_inv_importancestations,sim=sim,rela=rela,flask=flask,special=special
-
-  weekly  = 1
-
-  IF n_elements(sim) EQ 0 THEN BEGIN
-     sim = {name:'URMEL_SENSC_II',$
-          obsdir:'/nas/spc134/URMEL/INVERSION/OBSINPUT/',$
-          modeldir:'/nas/spc134/URMEL/FLEXPART80CTP/output/',$
-            outdir:'/home/spc134/IDL/urmel/INVERSION/',$
-             hdir: '/nas/spc134/URMEL/INVERSION/SENSITIVITIES/',$
-          syyyymm:'200002',eyyyymm:'200812',scaleq:[0.10,0.10,0.10,0.65,0.85,0.3,0.35,0.45,0.55,0.95,0.85],$
-          ntrace:11,nage:4}
-  ENDIF
-
-  IF keyword_set(flask) THEN BEGIN
-    ; flask measurements only
-   stats  =   [   'alt',   'brw',   'mhd',   'mlo',   'rpb',   'smo',   'thd',   'wsa',   'cgo',   'izo',$
-                   'zep',   'sum',$
-                   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',   'shm',   'oxk',   'lpo',   'esp',$
-                   'hpb',   'hun',   'puy',   'lef',   'amt',   'bsc',   'kzd',   'uum',   'pdm',   'bgu',$
-                   'nwr',   'uta',   'azr',   'pta',   'sgp',   'tap',   'wlg',   'lmp',   'bmw',   'bme',$
-                   'wkt',   'wis',   'key',   'ask',   'lln',   'kum',   'cri',   'gmi',   'abp',   'chr',$
-                   'mkn',   'sey',   'asc',   'cfa',   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',$
-                   'crz',   'mqa',   'tdf',   'psa',   'cya',   'syo',   'hba']                     
-  ENDIF ELSE BEGIN  
-    ; stats includes data from 34 continuous stations, until 'cgo'
-    stats  =   [   'alt',   'brw',   'cdl',   'zgt',   'etl',   'mhd',   'ngl',$
-                   'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
-                   'ryo',   'amy',   'tkb',   'izo',   'hat',   'mnm',   'yon',   'mlo',   'rpb',   'smo',$
-                   'cpt',   'cgo',   'zep',   'sum',   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',$
-                   'shm',   'oxk',   'lpo',   'esp',   'hpb',   'hun',   'puy',   'lef',   'amt',   'bsc',$
-                   'kzd',   'uum',   'pdm',   'bgu',   'nwr',   'uta',   'azr',   'pta',   'sgp',$
-                   'tap',   'wlg',   'lmp',   'bmw',   'bme',   'wkt',   'wis',   'key',   'ask',   'lln',$
-                   'kum',   'cri',   'gmi',   'abp',   'chr',   'mkn',   'sey',   'asc',   'cfa',$
-                   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
-                   'cya',   'syo',   'hba']
-  ENDELSE                                               
-
-  sn       = STRCOMPRESS(string(fix(n_elements(stats))),/REM)+'stats'
-  snflask  = '69stats'  
-  print, sn
+PRO table_inv_importancestations,sim,rela=rela
 
   ;*************
   ; DIRECTORIES
@@ -233,9 +192,9 @@ PRO table_inv_importancestations,sim=sim,rela=rela,flask=flask,special=special
       ENDELSE      
       
       ; read weekly model data in correct temporal order
-      modfile = '/nas/spc134/URMEL/INVERSION/m_allweekly_'+sn+'_'+sim.name+'_'+yyyymm+'.dat'      
-      IF keyword_set(flask) THEN   modfile = '/nas/spc134/URMEL/INVERSION/m_allweekly_flask_'+snflask+'_'+sim.name+'_'+yyyymm+'.dat'
-      IF keyword_set(special) THEN modfile = '/nas/spc134/URMEL/INVERSION/m_allweekly_special_'+sn+'_'+sim.name+'_'+yyyymm+'.dat'
+      modfile = '/nas/spc134/URMEL/INVERSION/m_allweekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'      
+      IF keyword_set(sim.flask) THEN modfile = '/nas/spc134/URMEL/INVERSION/m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'
+      IF keyword_set(sim.special) THEN modfile = '/nas/spc134/URMEL/INVERSION/m_allweekly_special_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'
       mch4  = DblArr(sim.ntrace*sim.nage,nc)
       help  = DblArr(sim.ntrace*sim.nage)
       mall  = DblArr(nc)    
@@ -296,15 +255,15 @@ PRO table_inv_importancestations,sim=sim,rela=rela,flask=flask,special=special
 
   ; write out result to file
   outfile = '/home/spc134/IDL/urmel/INVERSION/log/importancestations_percategory_'+sim.name+'_abs.dat'
-  IF keyword_set(special) THEN BEGIN
+  IF keyword_set(sim.special) THEN BEGIN
     IF keyword_set(rela) THEN $
     outfile = '/home/spc134/IDL/urmel/INVERSION/log/importancestations_percategory_special_'+sim.name+'_rel.dat' ELSE $
     outfile = '/home/spc134/IDL/urmel/INVERSION/log/importancestations_percategory_special_'+sim.name+'_abs.dat'
-    IF keyword_set(flask) THEN $
+    IF keyword_set(sim.flask) THEN $
     outfile = '/home/spc134/IDL/urmel/INVERSION/log/importancestations_percategory_special_flask_'+sim.name+'_abs.dat'    
     
   ENDIF       
-  IF keyword_set(flask) THEN $
+  IF keyword_set(sim.flask) THEN $
   outfile = '/home/spc134/IDL/urmel/INVERSION/log/importancestations_percategory_flask_'+sim.name+'_abs.dat' 
 
   openw,lun,outfile

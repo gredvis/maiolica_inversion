@@ -87,12 +87,8 @@ sim = {name:'final_sim01',$
 
   syra  = sim.syyyymm
   syre  = sim.eyyyymm
-  qunc  = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
 
-  IF keyword_set(weekly) THEN $
-  testfile = '/home/arf/pers/IDL/urmel/INVERSION/FINAL/inv_output_weekly_flask_69stats_'+sim.name+'_'+syra+'-'+syre+'_'+qunc+'_nov12.txt' $
-  ELSE $
-  testfile = '/home/arf/pers/IDL/urmel/INVERSION/FINAL/inv_output_'+sim.name+'_'+syra+'-'+syre+'_'+qunc+'.txt'
+  testfile = '/home/arf/pers/IDL/urmel/INVERSION/FINAL/inv_output_weekly_flask_69stats_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt'
 
   fcorr    = FltArr(n,ntrace)
   sa       = DblArr(n,ntrace)
@@ -162,7 +158,7 @@ sim = {name:'final_sim01',$
   syre = strmid(sim.eyyyymm,0,4)  
 
   plotdir = '/home/arf/pers/IDL/EPS/URMEL/INVERSION/'
-  plotfile = plotdir+'tseries_inv_catsanom_final_sim01_aposteriori_'+syra+'-'+syre+'_'+qunc+'.eps'
+  plotfile = plotdir+'tseries_inv_catsanom_final_sim01_aposteriori_'+syra+'-'+syre+'_'+sim.qunc+'.eps'
   load_ctb,'/home/arf/pers/IDL/GEOP/diff3.ctb'
   open_ps,plotfile,pssize=[20,10],/eps,/color
 
@@ -183,8 +179,7 @@ sim = {name:'final_sim01',$
   yrange = [-0.24,0.24]
   xrange = [0.,m]
 
-  col    = [3,5,7,132,19,20,9,11,14,15,207]
-col    = [cgcolor("OLIVE"),cgcolor("DARKGREEN"),cgcolor("PALEGREEN"),cgcolor("AQUAMARINE"),cgcolor("GREENYELLOW"),cgcolor("TEAL"),cgcolor("LIGHTSEAGREEN"),cgcolor("GREEN"),cgcolor("KHAKI"),cgcolor("SPRINGGREEN"),cgcolor("LIMEGREEN"),cgcolor("RED"),cgcolor("ORANGERED"),cgcolor("CRIMSON"),cgcolor("FIREBRICK"),cgcolor("SALMON"),cgcolor("DARKRED"),cgcolor("TOMATO"),cgcolor("PINK"),cgcolor("ROSE"),cgcolor("VIOLETRED"),cgcolor("MAGENTA"),cgcolor("SIENNA"),cgcolor("ORANGE"),cgcolor("BEIGE"),cgcolor("SEASHELL"),cgcolor("LIGHTYELLOW"),cgcolor("PAPAYA"),cgcolor("WHEAT"),cgcolor("BURLYWOOD"),cgcolor("LIGHTGRAY"),cgcolor("BLUE"),cgcolor("ROYALBLUE"),cgcolor("NAVY"),cgcolor("STEELBLUE"),cgcolor("CADETBLUE"),cgcolor("CORNFLOWERBLUE"),cgcolor("SKYBLUE"),cgcolor("DARKSLATEBLUE"),cgcolor("PURPLE"),cgcolor("POWDERBLUE"),cgcolor("DODGERBLUE"),cgcolor("YGB3"),cgcolor("TURQUOISE"),cgcolor("BLACK"),cgcolor("YELLOW"),cgcolor("GOLD"),cgcolor("GOLDENROD")]
+  col    = emiss_colors()
 
   plot,time,spanom[*,0],/xst,ytitle=ytitle,yrange=yrange,xrange=xrange,/yst,$
        charsize=1.4,xtickv=xtickv,xticks=xticks,xtickname=xtickname,charthick=1.,$
@@ -233,16 +228,7 @@ col    = [cgcolor("OLIVE"),cgcolor("DARKGREEN"),cgcolor("PALEGREEN"),cgcolor("AQ
 
   ; * ADD LEGEND
   ; **********************
-  c = ['Agriculture','Fuel production','Other anthropogenic','Tropical BB','Extratropical BB',$
-       'Rice agriculture','Natural inundated wetlands','Wet mineral soils','Peatlands NA',$
-       'Peatlands Siberia', 'Oceans, termites, wild animals']
-
-c = ['ANTH_AFR','ANTH_AUS','ANTH_CHIN','ANTH_EU','ANTH_IND','ANTH_MIDEAST','ANTH_NA','ANTH_OCE','ANTH_RUS','ANTH_SA','ANTH_SE_ASIA','BB_AUS','BB_CHIN',$
-          'BB_EU','BB_IND','BB_MID','BB_NAbor','BB_NAtemp','BB_NAFR','BB_RUS','BB_SAtemp','BB_SAtrop','BB_SE_ASIA','BB_SAFR','RICE_AFR','RICE_ASIA_AUS',$
-'RICE_CHIN','RICE_EU','RICE_IND','RICE_NA','RICE_SA','WETL_AUS','WETL_EU','WETL_MID','WETL_NAbor','WETL_NAFR','WETL_RUS','WETL_SAtemp','WETL_SAFR','WETL_CHIN','WETL_IND',$
-'WETL_NAtemp','WETL_SAtrop','WETL_SE_ASIA','WILD_anim','TERMITES','OCEAN','Volc']
-
-
+  c = emiss_categories()
 
   dy = 0.006
   ; anthropogenic emissions

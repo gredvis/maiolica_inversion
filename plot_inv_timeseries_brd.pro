@@ -19,7 +19,7 @@
 ; CALLING SEQUENCE:
 ;
 ;  plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
-;                            post=post,pripost=pripost,bg=bg,eps=eps,dump=dump     
+;                            post=post,bg=bg,eps=eps,dump=dump     
 ; INPUTS:
 ;
 ;       sim              : the simulation structure, see inv_configurations.pro
@@ -29,9 +29,9 @@
 ;       syyyy (string)   : first year to plot
 ;       eyyyy (string)   : last year to plot
 ;       /prelim          : set this keyword to plot results of preliminary inversion
-;       /prior           : set this keyword to plot obs and prior
-;       /post            : set this keyword to plot obs and posterior
-;       /pripost         : set this keyword to plot all
+;       /prior           : set this keyword to plot only obs and prior
+;       /post            : set this keyword to plot only obs and posterior
+;                          If neither /prior or /post is set, both are plotted
 ;       /bg              : set this keyword to plot backgrounds (oldest age class)
 ;       /eps             : set this keyword to write to eps file instead of screen
 ;       /dump            : set this keyword to write out station data (obs, apri, apost)
@@ -68,9 +68,9 @@
   ;;        hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
   ;;        syyyymm:'198902',eyyyymm:'201212',scaleq:[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,$
   ;;           0.27,0.27,0.27,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,0.65,$
-  ;;           0.55,0.55,0.55,0.55,0.55,0.55,0.55,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,
+  ;;           0.55,0.55,0.55,0.55,0.55,0.55,0.55,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,$
   ;;           0.5,0.4,0.4,0.4,0.4],ntrace:48,nage:5} ;keeppos1 change fcorr all
-
+  ;; This corresponds to a total(scaleq) of 23.37
 
   ;; ;; stats includes data from 34 continuous stations, until 'cgo'
   ;; stats  =   [   'alt',   'brw',   'llb',   'cdl',   'zgt',   'etl',   'kmw',   'mhd',   'ngl',$
@@ -89,7 +89,7 @@
 ;MAIN PROGRAM
 ;******************************************************************************
 PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
-                            post=post,pripost=pripost,bg=bg,eps=eps,dump=dump
+                            post=post,bg=bg,eps=eps,dump=dump
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
@@ -97,8 +97,8 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prio
   ENDIF
 
   load_ctb,'ive.ctb'
-  sn   = STRCOMPRESS(string(fix(n_elements(sim.stats))),/REM)+'stats'
-  qunc = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
+
+  IF NOT keyword_set(prior) AND NOT keyword_set(post) THEN pripost=1 ELSE pripost=0
 
   IF keyword_set(eps) THEN BEGIN
      psdir = sim.basedir + 'FIGURES/TSERIES/'
@@ -215,8 +215,8 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prio
   ;; write out station data to file
   IF keyword_set(dump) THEN BEGIN
      FOR i=0,nst-1 DO BEGIN
-        filename = sim.outdir + 'station_'+sim.stats[i]+'_'+sn+'_'+sim.name+'_'+$
-                   qunc+'_tseries.txt'
+        filename = sim.outdir + 'station_'+sim.stats[i]+'_'+sim.sn+'_'+sim.name+'_'+$
+                   sim.qunc+'_tseries.txt'
         openw,lun,filename,/get_lun
         printf,lun,'yyyymm  CH4obs(ppb) CH4apri(ppb) CH4apost(ppb)'
         format = '(a6,3(f13.2))'
@@ -269,6 +269,7 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prio
   ytitle = 'CH!D4!N (ppb)'
   months = indgen(12)+1 & xmrange=[1,12]
 
+  IF keyword_set(prelim) THEN pstr = '_prelim' ELSE pstr = ''
   ;; loop over stations and plot
   FOR i=0,nst-1 DO BEGIN
      statinfo = station_info(stats[i])
@@ -280,9 +281,9 @@ PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prio
 
      noerase = ip GT 1
      IF keyword_set(eps) AND noerase EQ 0 THEN BEGIN
-        figname = 'tseries_fig'+STRING(floor(i/nfig),format='(i2.2)')+'_'+sn+'_'+$
+        figname = 'tseries_fig'+STRING(floor(i/nfig),format='(i2.2)')+'_'+sim.sn+'_'+$
                   sim.name+'_'+string(syyyy,format='(i4)')+'_'+STRING(eyyyy,format='(i4)')+$
-                  '_'+qunc+suffix
+                  '_'+sim.qunc+pstr+suffix
         filename = psdir+figname
         open_ps,filename,/eps,/color,pssize=[24,24],tt_type='Helvetica'
      ENDIF

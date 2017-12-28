@@ -44,69 +44,8 @@
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO plot_inv_methane_seasonalcycle_final,sim=sim,lat=lat,stats=stats
+PRO plot_inv_methane_seasonalcycle_final,sim,lat=lat,stats=stats
 
-  IF n_elements(sim) EQ 0 THEN BEGIN
-     sim = {name:'URMEL_SENSC_II',$
-          obsdir:'/nas/spc134/URMEL/INVERSION/OBSINPUT/',$
-          modeldir:'/nas/spc134/URMEL/FLEXPART80CTP/output/',$
-            outdir:'/home/spc134/IDL/urmel/INVERSION/',$
-             hdir: '/nas/spc134/URMEL/INVERSION/SENSITIVITIES/',$
-          syyyymm:'200002',eyyyymm:'200812',scaleq:[0.1,0.1,0.1,0.65,0.85,0.3,0.35,0.45,0.55,0.95,0.85],$
-          ntrace:11,nage:4}
-
-sim = {name:'final_sim01',$
-         obsdir:'/nas/arf/INVERSION/OBSINPUT/',$
-         modeldir:'/nas/arf/output/',$
-         outdir:'/home/arf/pers/IDL/urmel/INVERSION/',$
-         hdir: '/nas/arf/INVERSION/SENSITIVITIES/',$
-         syyyymm:'198902',eyyyymm:'200912',scaleq:[0.950000 ,    0.950000 ,    0.650000,     0.650000 ,    0.950000   ,  0.950000, 0.450000  ,   0.950000 ,    0.950000   ,  0.950000   ,  0.950000  ,   0.950000, 0.950000   ,  0.950000 ,    0.95000, 0.950000   ,   0.00000   ,  0.950000 , 0.950000  ,    0.00000  ,   0.950000   ,   0.00000  ,   0.950000  ,    0.00000 , 0.950000   ,  0.950000  ,   0.950000   ,  0.950000  ,   0.950000  ,   0.950000  , 0.950000 ,    0.950000   ,  0.700000 ,    0.950000 ,    0.950000  ,   0.950000 , 0.850000  ,   0.950000  ,   0.950000  ,   0.800000  ,   0.950000   ,  0.100000 ,  1.66000  ,    1.66000  ,    1.45000  ,    1.45000  ,    1.45000  ,    1.45000],$ ; MAX LLH
-ntrace:48,nage:5} 
-
-sim = {name:'final_sim01',$
-         obsdir:'/nas/arf/INVERSION/OBSINPUT/',$
-         modeldir:'/nas/arf/output/',$
-         outdir:'/home/arf/pers/IDL/urmel/INVERSION/',$
-         hdir: '/nas/arf/INVERSION/SENSITIVITIES/',$
-         syyyymm:'198902',eyyyymm:'201212',scaleq:[0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,0.27,1.65,1.65,1.05,1.65,1.65,1.05,1.05,1.65,1.05,1.65,1.65,1.65,1.65,0.55,0.55,0.55,0.55,0.55,0.55,0.55,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.66,1.45,1.45,1.45,1.45],$
-         ntrace:48,nage:5} ;REF with uncert derived from spc
-sim = {name:'final_sim01',$
-         obsdir:'/nas/arf/INVERSION/OBSINPUT/FINAL/',$
-         modeldir:'/nas/arf/output/',$
-         outdir:'/home/arf/pers/IDL/urmel/INVERSION/FINAL/',$
-         hdir: '/nas/arf/INVERSION/SENSITIVITIES/FINAL/',$
-         syyyymm:'198902',eyyyymm:'201212',scaleq:[0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.97,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50,0.50],$
-         ntrace:48,nage:5} ;keeppos1 change fcorr all flask initialised not to 1
-
-
-  ENDIF
-                 
-  IF n_elements(stats) EQ 0 THEN BEGIN
-    stats  =   [   'alt',   'brw',   'llb',   'cdl',   'zgt',   'etl',   'kmw',   'mhd',   'ngl',$
-                   'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
-                   'ryo',   'amy',   'tkb',   'izo',   'hat',   'mnm',   'yon',   'mlo',   'rpb',   'smo',$
-                   'cpt',   'cgo',   'zep',   'sum',   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',$
-                   'shm',   'oxk',   'lpo',   'esp',   'hpb',   'hun',   'puy',   'lef',   'amt',   'bsc',$
-                   'kzd',   'uum',   'pdm',   'bgu',   'nwr',   'uta',   'azr',   'pta',   'sgp',$
-                   'tap',   'wlg',   'lmp',   'bmw',   'bme',   'wkt',   'wis',   'key',   'ask',   'lln',$
-                   'kum',   'cri',   'gmi',   'abp',   'chr',   'bkt',   'mkn',   'sey',   'asc',   'cfa',$
-                   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
-                   'cya',   'syo',   'hba']
-
- stats  =   [   'alt',   'brw',   'mhd',   'mlo',   'rpb',   'smo',   'thd',   'wsa',   'cgo',   'izo',$
-                   'zep',   'sum',$
-                   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',   'shm',   'oxk',   'lpo',   'esp',$
-                   'hpb',   'hun',   'puy',   'lef',   'amt',   'bsc',   'kzd',   'uum',   'pdm',   'bgu',$
-                   'nwr',   'uta',   'azr',   'pta',   'sgp',   'tap',   'wlg',   'lmp',   'bmw',   'bme',$
-                   'wkt',   'wis',   'key',   'ask',   'lln',   'kum',   'cri',   'gmi',   'abp',   'chr',$
-                   'mkn',   'sey',   'asc',   'cfa',   'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',$
-                   'crz',   'mqa',   'tdf',   'psa',   'cya',   'syo',   'hba']
-
-  ENDIF  
-
-flask=1
-                   
-  sn = STRCOMPRESS(string(n_elements(stats)),/REM)+'stats'   
 
   ; calculate number of months to simulate
   syyyy = fix(strmid(sim.syyyymm,0,4)) & smm = fix(STRMID(sim.syyyymm,4,2))
@@ -133,12 +72,11 @@ flask=1
   seasalla    = FltArr(m)
   seasallp    = FltArr(m)
   
-  qunc = 'opt'+STRCOMPRESS(string(total(sim.scaleq)),/REM)
   syra  = sim.syyyymm
   syre  = sim.eyyyymm
   IF keyword_set(flask) THEN $
-  testfile = sim.outdir+'inv_output_weekly_flask_'+sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+qunc+'_nov12.txt' $
-  ELSE testfile = sim.outdir+'inv_output_weekly_'+sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+qunc+'_nov12.txt'
+  testfile = sim.outdir+'inv_output_weekly_flask_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_nov12.txt' $
+  ELSE testfile = sim.outdir+'inv_output_weekly_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt'
   
   fcorr    = DblArr(n)
   sa       = DblArr(n,sim.ntrace)
@@ -207,8 +145,8 @@ flask=1
       ENDELSE
       
     IF keyword_set(flask) THEN $
-    sensfile = sim.hdir+'inv_sensitivity_weekly_flask_'+sn+'_'+sim.name+'_'+cyyyymm+'_nov12.txt' $
-    ELSE sensfile = sim.hdir+'inv_sensitivity_weekly_'+sn+'_'+sim.name+'_'+cyyyymm+'_nov12.txt'
+    sensfile = sim.hdir+'inv_sensitivity_weekly_flask_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'_nov12.txt' $
+    ELSE sensfile = sim.hdir+'inv_sensitivity_weekly_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'_nov12.txt'
     nc = 0 & nospt = 0 & dummy = 0
     openr,lun,sensfile,/get_lun  
     readf,lun,dummy
@@ -254,8 +192,8 @@ flask=1
 
     ; read model data
     IF keyword_set(flask) THEN $
-    modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_flask_'+sn+'_'+sim.name+'_'+cyyyymm+'.dat' $
-    ELSE modfile = '/nas/arf/INVERSION/m_allweekly_'+sn+'_'+sim.name+'_'+cyyyymm+'.dat'
+    modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat' $
+    ELSE modfile = '/nas/arf/INVERSION/m_allweekly_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'
     mch4  = DblArr(sim.ntrace*sim.nage,nc)
     mch4a = DblArr(ntrace,nc) 
     help = DblArr(sim.ntrace*sim.nage)
@@ -283,8 +221,8 @@ flask=1
 
     ; now read weekly aposteriori model estimates for individual categories
     IF keyword_set(flask) THEN $
-    catfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_flask_'+sn+'_'+sim.name+'_'+qunc+'_'+cyyyymm+'.dat' $
-    ELSE catfile = '/nas/arf/INVERSION/m_weekly_apost_categories_'+sn+'_'+sim.name+'_'+qunc+'_'+cyyyymm+'.dat'
+    catfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_flask_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat' $
+    ELSE catfile = '/nas/arf/INVERSION/m_weekly_apost_categories_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat'
     ch4cat  = FltArr(ntrace,nc)
     openr,lun2,catfile,/get_lun
     FOR k=0,nc-1 DO BEGIN
@@ -368,7 +306,7 @@ flask=1
     3: np = 'global'
   ENDCASE
  
-  file='/home/arf/pers/IDL/EPS/URMEL/INVERSION/ch4_seasonalcycle_cats_'+sn+'_'+sim.name+'_'+np+'_'+qunc+'.eps'
+  file='/home/arf/pers/IDL/EPS/URMEL/INVERSION/ch4_seasonalcycle_cats_'+sim.sn+'_'+sim.name+'_'+np+'_'+sim.qunc+'.eps'
   load_ctb,'/home/spc134/IDL/GEOP/diff3.ctb'
   open_ps,file,pssize=[24,20],/eps,/color
 
@@ -377,19 +315,12 @@ flask=1
   !P.FONT=1
 
   col    = [5,132,19,20,9,11,14,15,207] 
-  col    = [cgcolor("OLIVE"),cgcolor("DARKGREEN"),cgcolor("PALEGREEN"),cgcolor("AQUAMARINE"),cgcolor("GREENYELLOW"),cgcolor("TEAL"),cgcolor("LIGHTSEAGREEN"),cgcolor("GREEN"),cgcolor("KHAKI"),cgcolor("SPRINGGREEN"),cgcolor("LIMEGREEN"),cgcolor("RED"),cgcolor("ORANGERED"),cgcolor("CRIMSON"),cgcolor("FIREBRICK"),cgcolor("SALMON"),cgcolor("DARKRED"),cgcolor("TOMATO"),cgcolor("PINK"),cgcolor("ROSE"),cgcolor("VIOLETRED"),cgcolor("MAGENTA"),cgcolor("SIENNA"),cgcolor("ORANGE"),cgcolor("BEIGE"),cgcolor("SEASHELL"),cgcolor("LIGHTYELLOW"),cgcolor("PAPAYA"),cgcolor("WHEAT"),cgcolor("BURLYWOOD"),cgcolor("LIGHTGRAY"),cgcolor("BLUE"),cgcolor("ROYALBLUE"),cgcolor("NAVY"),cgcolor("STEELBLUE"),cgcolor("CADETBLUE"),cgcolor("CORNFLOWERBLUE"),cgcolor("SKYBLUE"),cgcolor("DARKSLATEBLUE"),cgcolor("PURPLE"),cgcolor("POWDERBLUE"),cgcolor("DODGERBLUE"),cgcolor("YGB3"),cgcolor("TURQUOISE"),cgcolor("BLACK"),cgcolor("YELLOW"),cgcolor("GOLD"),cgcolor("GOLDENROD")]
+  col = emiss_colors()
   
   time   = 0.+findgen(12)
   title  = ''
 
-  cat    = ['Agriculture','Fuel production','Waste and combustion','BB Tropics','BB Extratropics','Rice agriculture','Inundated wetlands','Mineral soils','Peatlands North America',$
-            'Peatlands Eurasia','Other natural','All']         
-
-
- cat  = ['ANTH_AFR','ANTH_AUS','ANTH_CHIN','ANTH_EU','ANTH_IND','ANTH_MIDEAST','ANTH_NA','ANTH_OCE','ANTH_RUS','ANTH_SA','ANTH_SE_ASIA','BB_AUS','BB_CHIN',$
-          'BB_EU','BB_IND','BB_MID','BB_NAbor','BB_NAtemp','BB_NAFR','BB_RUS','BB_SAtemp','BB_SAtrop','BB_SE_ASIA','BB_SAFR','RICE_AFR','RICE_ASIA_AUS',$
-'RICE_CHIN','RICE_EU','RICE_IND','RICE_NA','RICE_SA','WETL_AUS','WETL_EU','WETL_MID','WETL_NAbor','WETL_NAFR','WETL_RUS','WETL_SAtemp','WETL_SAFR','WETL_CHIN','WETL_IND',$
-'WETL_NAtemp','WETL_SAtrop','WETL_SE_ASIA','WILD_anim','TERMITES','OCEAN','Volc']
+  cat = emiss_categories()
 
   nall   = ntrace+1
   nall   = 12 ;flo
