@@ -48,32 +48,30 @@ PRO run_inversion_final,sim=sim,dlr=dlr
 
   ;; basic simulation configuration and directory settings
   ;; run = 'NEW_DLR'
-  ;;run = '22.4'
+  run = '22.4'
+  run = '25.1'
 
   ;; larger uncertainties, especially for wetland emissions
-  run = '32.8'
-  run = '65.6'
-
-  ;; Dominik with uncert = 0.3 for anthrop, 0.7 for bb, rice, wetl, 0.5 for rest
-  ;; and data-observation uncertainties reduced by factor 0.75
-  ;;run = '28.4'
+  ;; Dominik with uncert = 0.4 for anthrop, 0.8 for bb, rice, wetl, 0.5 for rest
+  ;run = '32.8'
+  ;run = '65.6'      
 
   ;;sconfig = 'flask'             ; options are 'flask', 'all', 'special'
-  sconfig = 'flask_DLR2'        ; options are 'flask', 'all', 'special', 'flask_DLR2'
+  ;;sconfig = 'flask_DLR2'        ; options are 'flask', 'all', 'special', 'flask_DLR2'
+  sconfig = 'brd'               ; options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
 
   sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
   IF NOT ok THEN RETURN
 
   ;; activate steps
-  step1 = 0   ; step1: read in original obs data and write to monthly files of weekly means
-  step2 = 0   ; step2: read in model receptor output and write to monthly files of weekly means
-  step3 = 0   ; step3: compute model-data mismatch first time
-  step4 = 1   ; step4: run preliminary inversion to compute aposteriori model-data mismatch
-  step5 = 1   ; step5: compute model-data mismatch second time using aposteriori model data
-  step6 = 1   ; step6: run final inversion
-  step7 = 0   ; step7: run inv_emissions_ratio to determine model estimate separated into categories
-  step8 = 0   ; step8: run plot programs      
-  step9 = 0   ; step9: run plot programs 2
+  step1 = 0   ; step1: create monthly files of weekly mean observation and model data
+              ; needs to be called only once for FLEXPART or EMACs, since the output is
+              ; generated for all available sites irrespective of the simulation settings
+  step2 = 1   ; step2: compute model-data mismatch first time
+  step3 = 1   ; step3: run preliminary inversion to compute aposteriori model-data mismatch
+  step4 = 1   ; step4: compute model-data mismatch second time using aposteriori model data
+  step5 = 1   ; step5: run final inversion
+  step6 = 0   ; step6: run plot programs      
     
   ;************************************************************************
   ; start program chain:
@@ -81,76 +79,60 @@ PRO run_inversion_final,sim=sim,dlr=dlr
 
   ;; 1. compute weekly mean observation data and write to monthly files
   IF keyword_set(step1) THEN BEGIN
-     inv_obsvector_mon_weekly_brd,sim
-   ENDIF ELSE BEGIN
-     print, 'Skipped step1: computing weekly mean observational data'
-  ENDELSE
-
-  ;; 2. compute weekly mean model data and write to monthly files
-  IF keyword_set(step2) THEN BEGIN
-     inv_modvector_mon_weekly_brd,sim,/plot
+     print, '1. Compute and write out weekly mean obs and model data'
+     inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
   ENDIF ELSE BEGIN
-     print, 'Skipped step2: computing weekly mean model data'  
-  ENDELSE
-
-  ;; 3. compute observational errors
-  IF keyword_set(step3) THEN BEGIN
-     print, '3. Run inv_error_diagonal_weekly'
-     inv_error_diagonal_weekly_brd,sim
-  ENDIF ELSE BEGIN
-     print, 'Skipped step3: computing model-data mismatch first time'    
+     print, 'Skipped step1: computing weekly mean observation and model data'
   ENDELSE
   
-  ;; 4. run preliminary inversion that yields first prior model estimates with which,
-  ;;    in the following, improved observational errors can be calculated
-  IF keyword_set(step4) THEN BEGIN
-     print, '4. Run preliminary inversion'
-     hdump    = 1
-     rapriori = 1
-     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,serzlen=serzlen,$
-                 rapriori=rapriori,sernobse=sernobse
+  ;; 2. compute and write out model-data mismatch uncertainties first time
+  IF keyword_set(step2) THEN BEGIN
+     print, '2. Compute and write out (prior) model-data mismatch first time'
+     inv_create_monthly_station_output,sim,/prelim,/prior
+     inv_create_model_data_mismatch,sim,/prelim ;,plot=plot
   ENDIF ELSE BEGIN
-     print, 'Skipped step4: running preliminary inversion to compute aposteriori model-data mismatch'      
+     print, 'Skipped step2: computing model-data mismatch for preliminary inversion'    
   ENDELSE
- 
-  ; 5. compute new observational errors that go into the final inversion
-  IF keyword_set(step5) THEN BEGIN
-    print, '5. Compute error covariance values again for final inversion'
-    inv_error_diagonal_weekly_brd,sim,/apost
-    ;inv_error_diagonal_weekly_aposteriori_brd,sim,ufact=ufact
+  
+  ;; 3. run preliminary inversion that yields first prior model estimates with which,
+  ;;    in the following, improved observational errors can be calculated
+  IF keyword_set(step3) THEN BEGIN
+     print, '3. Run preliminary inversion'
+     inv_run_brd,sim,/prelim
+     ;; add posteriori fields to station output
+     inv_create_monthly_station_output,sim,/prelim,/append
   ENDIF ELSE BEGIN
-     print, 'Skipped step5: computing error covariance values again for final inversion'
+     print, 'Skipped step3: running preliminary inversion to compute aposteriori model-data mismatch'      
+  ENDELSE
+  
+  ; 4. compute new observational errors that go into the final inversion
+  IF keyword_set(step4) THEN BEGIN
+     print, '4. Compute error covariance values again for final inversion'
+     inv_create_model_data_mismatch,sim ;,plot=plot
+  ENDIF ELSE BEGIN
+     print, 'Skipped step4: computing model-data mismatch for final inversion'
   ENDELSE  
   
-  ;; 6. run inversion second time to obtain final estimates
-  IF keyword_set(step6) THEN BEGIN
-     print, '6. Run final inversion'
-     hdump     = 1
-     rapriori  = 0              ;1
-     inv_run_brd,sim,hdump=hdump,serdllh=serdllh,serzlen=serzlen,$
-                 rapriori=rapriori,sernobse=sernobse
+  ;; 5. run inversion second time to obtain final estimates
+  IF keyword_set(step5) THEN BEGIN
+     print, '5. Run final inversion'
+     inv_run_brd,sim
+     ;; write out monthly mean station output (obs and model prior and posterior)
+     inv_create_monthly_station_output,sim
   ENDIF ELSE BEGIN
-     print, 'Skipped step6: running final inversion'        
-  ENDELSE        
-  
-  ;; 7. compute model estimates from final inversion separated in categories
-  IF keyword_set(step7) THEN BEGIN
-     print, '7. compute a posteriori model estimates divided into categories'
-     inv_emissions_ratio_brd,sim
-  ENDIF ELSE BEGIN
-     print, 'Skipped step7: running inv_emissions_ratio to determine model estimate separated into categories'        
+     print, 'Skipped step5: running final inversion'        
   ENDELSE
   
   print, 'End of process chain'
   
   ;************************ END PROCESSING *************************************************
   
-  IF keyword_set(step8) THEN BEGIN
+  IF keyword_set(step6) THEN BEGIN
   
      print, 'Plotting now ...'
 
      ;; plot a priori, a posteriori and observed station time series
-     plot_inv_timeseries_brd,sim,/eps
+     plot_inv_timeseries_brd,sim,/map,/eps
 
      ;; plot growth rates
      plot_growth_rates_brd,sim,/eps

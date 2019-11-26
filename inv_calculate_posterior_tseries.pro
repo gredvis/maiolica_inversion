@@ -39,6 +39,8 @@
 ; KEYWORD PARAMETERS:
 ;
 ;   /prelim                  : set this keyword to read results from preliminary inversion
+;
+;   The following three fields need to be present to allow looping over all months:
 ;   sa     (DblArr,n,ntrace) : the a priori emissions of the ntrace tracers
 ;                              and n months of simulation
 ;   sp     (DblArr,n,ntrace) : the corresponding a posteriori emissions
@@ -86,11 +88,12 @@
 ;  Empa, Swiss Federal Laboratories for Materials Science and Technology
 ;  dominik.brunner@empa.ch
 ;  DB, 26 Nov 2017: first implementation
-;
+;  DB, 06 Jan 2018: adjusted to new netcdf output
 ;-
 PRO inv_calculate_posterior_tseries,sim,yyyymm,prelim=prelim,ch4obs=ch4obs,ch4apri=ch4apri,$
-                                    sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post
+                                    sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post,ok=ok
 
+  ok = 0
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
      RETURN
@@ -113,11 +116,14 @@ PRO inv_calculate_posterior_tseries,sim,yyyymm,prelim=prelim,ch4obs=ch4obs,ch4ap
   IF im LT 0 OR im GT (n-1) THEN RETURN
 
   ;; read in monthly a priori and a posteriori emissions and scaling factors
-  ;; for the whole simulation
   IF n_elements(sa) EQ 0 OR n_elements(sp) EQ 0 OR n_elements(fcorr) EQ 0 THEN BEGIN
-     read_apri_apost_fcorr,sim,sa=sa,sp=sp,fcorr=fcorr,prelim=prelim
+     result = read_inv_results_netcdf(sim,prelim=prelim,/emisonly)
+     IF size(result,/type) EQ 2 THEN RETURN
+     sa = result.emis_apri
+     sp = result.emis_apost
+     fcorr = result.scalef
   ENDIF
-
+  
   FOR i=0,n_elements(ch4obs)-1 DO BEGIN
 
      FOR j=0,sim.ntrace-1 DO BEGIN
@@ -150,4 +156,5 @@ PRO inv_calculate_posterior_tseries,sim,yyyymm,prelim=prelim,ch4obs=ch4obs,ch4ap
      ENDFOR
   ENDFOR
 
+  ok = 1
 END

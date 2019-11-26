@@ -48,10 +48,8 @@
 ;         stats:stats,ufact:ufact,$         ; list of stations and uncertainy scaling factors
 ;         stat_levs:levs,$                  ; altitude levels at which FLEXPART is evaluated
 ;         flask:flask,$                     ; =1 if only flask sites are included
-;         special:special,$                 ; =1 if 'special' site list is selected
-;         nobg:nobg,$                       ; =1 if only non-background data should be used
-;         statfilt:statfilt,$               ; list of sites to be filtered 
-;         brw:brw,$                         ; =1 use non-background data only at Barrow
+;         filter:filter,$                   ; =1 to enforce filtering for non-background values
+;         statfilt:statfilt,$               ; list of sites to be filtered if /filter is set
 ;         weekly:weekly,$                   ; =1 to aggregate to weekly observation
 ;         keeppos:keeppos,$                 ; =1 to use log of emissions for positive solutions
 ;         startcf:startcf}                  ; list of initial scaling factors
@@ -102,6 +100,8 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
 
   obsdir = basedir+'OBSINPUT/'                           ; directory of pre-processed observation data
   moddir = basedir+'MODINPUT/'                           ; directory of pre-processed model data
+  obsmoddir = basedir+'OBSMODINPUT/'                     ; directory of pre-processed obs and model data in netcdf format
+                                                         ; (basically makes obsdir and moddir redunctant)
   errcovdir = basedir+'ERRORCOVARIANCE/'                 ; directory of station errors (diff model - station)
   outdir = basedir+'RESULTS/'                            ; output directory for inversion results
   modeldir = '/project/arf/nas/output/'                  ; base directory of FLEXPART model output
@@ -109,30 +109,30 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   hdir = basedir+'SENSITIVITIES/'                        ; directory to store weekly sensitivities per station
   ;;wdcggdir = '/nas/input/WDCGG/'                       ; directory of original CH4 data
   wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
+  wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG2017/'
 
   ntrace = 48                                            ; number of tracers
   nage = 5                                               ; number of age classes
   weekly  = 1                                            ; use weekly means of observational and model data
   keeppos = 1                                            ; take the logarithm of the emissions  
-  nobg = 0                                               ; use only non-background values (always set to 0!)
+
+  dlrscale = 1.03               ; default scaling factor for DLR output to compensate low
+                                ; bias with prescribed OH field
 
   ;; station configuration
-  IF n_elements(sconfig) EQ 0 THEN sconfig = 'flask' ; options are 'flask', 'all', 'special', 'flask_DLR2'
+  IF n_elements(sconfig) EQ 0 THEN sconfig = 'flask' ; options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
 
   ;; flags for certain station configurations
   flask   = strpos(sconfig,'flask') NE -1
-  special = strpos(sconfig,'special') NE -1
-
+  ;; flag for additional filtering for non-background values
+  filter = strpos(sconfig,'special') NE -1 OR strpos(sconfig,'brd') NE -1
   
   ; non-background conditions only where available
   statfilt = ['brw']
    
-  ; invalidate data at Barrow flagged as '.C.', i.e. to data identified as non-background
-  brw     = 0
-
   CASE run OF
      'NEW_DLR': BEGIN ; probably the final setting used!
-        ;; keeppos0 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori
+        ;; keeppos1 change fcorr all flask not initialised  to 1 and new inv_run sp23 apriori
         ;; uncert from literature, taking into account diff regions and also fact that we 
         ;; optimize each month 4 times
         scaleq=[0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.20,0.40,0.40,0.40,0.40,0.40,$
@@ -186,12 +186,6 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
                 0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,$
                 0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.60,0.50,0.50,0.50,0.50]
      END
-     '28.4': BEGIN
-        ;; Xhisquare about 1.0 when using ufact[*] = 0.68
-        scaleq=[0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.70,0.70,0.70,0.70,0.70,$
-                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,$
-                0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.70,0.50,0.50,0.50,0.50]
-     END
      '32.8': BEGIN
         ;; Xhisquare about 1.0 when using ufact[*] = 0.68
         scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.80,0.80,0.80,0.80,0.80,$
@@ -199,7 +193,9 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
                 0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]
      END
      '65.6': BEGIN
-        ;; Xhisquare about 1.0 when using ufact[*] = 0.68
+        ;; Xhisquare 0.94 when using ufact[*] = 0.68, high log-likelihood. However,
+        ;; Extended Kalman smoother appears to become unstable at such high prior uncertainties,
+        ;; correlations of posterior time series mostly lower than those of prior
         scaleq=[0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.40,0.80,0.80,0.80,0.80,0.80,$
                 0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,$
                 0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.80,0.50,0.50,0.50,0.50]*2
@@ -342,8 +338,11 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
   IF NOT ok THEN RETURN,-1
 
-  IF run EQ '25.1' THEN ufact = ufact * 0.6
-  IF run EQ '28.4' OR run EQ '32.8' OR run EQ '65.6' THEN ufact = ufact * 0.68
+  ufact = ufact * 1.75
+
+  ;IF run EQ '32.8' OR run EQ '22.4' THEN ufact = ufact * 1.5
+  ;IF run EQ '25.1' THEN ufact = ufact * 0.6
+  ;IF (run EQ '32.8' OR run EQ '65.6') AND NOT keyword_set(dlr) THEN ufact = ufact * 0.68
 
   ;; get optimal FLEXPART receptor output levels for these sites
   station_rcpt_levs,stats,levs=levs
@@ -397,9 +396,11 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
          sn:sn,$                ; string 'NNstats' with NN number of stations used for file names
          qunc:qunc,$            ; string 'optUU.U' with total a priori uncertainty used for file names 
          dlr:keyword_set(dlr),$ ; flag for DLR output
+         dlrscale:dlrscale,$    ; scaling factor to correct low bias in DLR data, default is 1.04
          basedir:basedir,$      ; base directory of inversion output
          obsdir:obsdir,$        ; directory of pre-processed weekly observation data
          moddir:moddir,$        ; directory of pre-processed weekly model data
+         obsmoddir:obsmoddir,$  ; directory of pre-processed weekly obs and model data in netcdf format
          errcovdir:errcovdir,$  ; directory with diagnonal elements of model-data mismatch uncert
          outdir:outdir,$        ; results directory
          modeldir:modeldir,$
@@ -415,10 +416,8 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
          ufact:ufact,$
          stat_levs:levs,$
          flask:flask,$
-         special:special,$
-         nobg:nobg,$
+         filter:filter,$
          statfilt:statfilt,$
-         brw:brw,$
          startcf:startcf}
 
   RETURN,sim

@@ -8,16 +8,14 @@
 ; CALLING SEQUENCE:
 ;     read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
 ;                     values=values,flag=flag,ndata=ndata,characteristics=characteristics,$
-;                     brw=brw,special=special,statfilt=statfilt
+;                     filter=filter,statfilt=statfilt
 ;
 ; KEYWORD INPUTS:
 ;     file       (STRING) : path of WDCGG file
 ;     contri     (STRING) : acronym of contributing network
-;     /brw                : set keyword to filter all non-background values at BRW
-;     /special            : set keyword to additionally filter all stations listed in
+;     /filter             : set keyword to additionally filter all stations listed in
 ;                           statfilt for non-background values
 ;     statfilt            : list of stations to which more stringent filtering is applied
-;                           (there seems to be some redundancy with /brw)
 ;     
 ; OUTPUTS:
 ;     lat           (FLOAT) : station latitude
@@ -39,7 +37,7 @@
 ;-
 PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
                    values=values,flag=flag,ndata=ndata,characteristics=characteristics,$
-                   brw=brw,special=special,statfilt=statfilt
+                   filter=filter,statfilt=statfilt
   
   datei = file_search(file,count=count)
   IF count EQ 0 THEN BEGIN
@@ -51,26 +49,27 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
 
   ; intercalibration factors for CH4 to NOAA04 scale, continuous & flask providers
   CASE contri OF
-    'aemet': conv = 1.
-    'agage': conv = 1.0003
-    'csiro': conv = 1.
-       'ec': conv = 1.
+     'aemet': conv = 1.
+     'agage': conv = 1.0003
+     'csiro': conv = 1.
+     'ec': conv = 1.
      'enea': conv = 1.
      'empa': conv = 1.
      'ipen': conv = 1.
-      'jma': conv = 1.
-      'kma': conv = 1.013     ; Anmyeon-do has KRISS scale, scale up by a factor of 1.3%
-     'gerc': conv = 1.        ; Gosan has NOAA04 scale
+     'jma': conv = 1.
+;     'kma': conv = 1.013        ; Anmyeon-do has KRISS scale, scale up by a factor of 1.3%
+     'kma': conv = 1.0          ; Anmyeon-do now has NOAA04 scale
+     'gerc': conv = 1.          ; Gosan has NOAA04 scale
      'lsce': conv = 1.0124
-      'mgo': conv = 1.
+     'mgo': conv = 1.
      'mpij': conv = 1.
-      'mri': conv = 0.9973
+     'mri': conv = 0.9973
      'nier': conv = 1.
      'nies': conv = 0.9973
      'niwa': conv = 1.
      'noaa': conv = 1.
      'rivm': conv = 0.9973
-      'rse': conv = 1.
+     'rse': conv = 1.
      'saws': conv = 1.
      'ubag': conv = 1.
      'cmdl': conv = 1.0124
@@ -78,10 +77,10 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
   ENDCASE
 
   ; USA stands for USA standard scale (NIST)
-  calstandard = ['NOAA04','NOAA-04','WMO','NOAA','KRISS',   'USA','Tohoku','NOAA/CMDL','NIES','NONE',$
-                 'indirect', 'MRI', 'NOAA2004', '1999~2006:']
+  calstandard = ['NOAA04','NOAA-04','WMO','NOAA','KRISS',   'USA Standard','Tohoku University',$
+                 'NOAA/CMDL','NIES','NONE','indirect', 'MRI', 'NOAA2004', '1999~2006:', 'NOAA X2004A']
   convfactor  = [      1.,       1.,   1.,1.0124,  1.013,  0.9973, 1.0003,     1.0124,0.9973,    1., $
-                       1.,0.9973,    1.,   1.013]
+                       1.,0.9973,    1.,   1.013, 1.]
   
   provider    = ['csiro','ec','jma','mgo','noaa','cmdl','rse','ubag','lsce']
   ; AEMET, EMPA, ENEA, IPEN, ISAC, KMA,
@@ -105,10 +104,11 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
   nrem           = [13,1,2,8,10,10,1,3,4]
     
   ;; additional filtering for non-background values for subset of sites
-  IF keyword_set(special) AND n_elements(statfilt) NE 0 THEN BEGIN
+  IF keyword_set(filter) AND n_elements(statfilt) NE 0 THEN BEGIN
      ind = WHERE(station eq statfilt,cfilt)
      IF cfilt eq 1L THEN BEGIN
-        print, 'Filtering data for station ', STRMID(file,27,3)
+        fname = file_basename(file)
+        print, 'Filtering data for station ', STRMID(fname,0,3)
         ;; prepare to remove flagged data
         remove          = StrArr(nprov,17)
         nrem            = IntArr(nprov)
@@ -124,9 +124,9 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
         remove[7,0:2]   = ['3','6','9']                                                       ; UBA
         remove[8,0:3]   = ['N..','+..','III','..S']                                           ; LSCE 
         nrem            = [17,1,8,9,11,11,1,3,4]
-        print, 'filtering out non-bg values for station ', STRMID(file,27,3)
+        print, 'filtering out non-bg values for station ', STRMID(fname,0,3)
      ENDIF
-  ENDIF 
+  ENDIF ELSE cfilt=0
 
   lat     = 0.
   lon     = 0.
@@ -217,6 +217,8 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
   result  = STRSPLIT(sline,/EXTRACT)
   IF n_elements(result) LT 4 THEN BEGIN
      IF station EQ 'tkb' THEN cal='MRI' ELSE stop
+  ENDIF ELSE IF n_elements(result) GT 5 THEN BEGIN
+     cal     = result[3]+' '+result[4] ; check calibration standard
   ENDIF ELSE BEGIN
      cal     = result[3]                ; check calibration standard
   ENDELSE
@@ -237,8 +239,8 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
      values[k]  = float(entry[4])
      flag[k]   = entry[7]
      IF values[k] lt 0. THEN values[k] = !VALUES.F_NAN
-     IF keyword_set(brw) THEN IF characteristics[0] eq 'brw' and flag[k] eq '.C.' THEN $
-        ch4[k] = !VALUES.F_NAN        
+     IF keyword_set(filter) THEN IF characteristics[0] eq 'brw' and flag[k] eq '.C.' THEN $
+        values[k] = !VALUES.F_NAN        
 
      ;;*****************************************
      ;;* intercalibrate data to NOAA04 standard
@@ -263,6 +265,14 @@ PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtim
   ENDFOR                        ; end loop over data
 
   free_lun,lun
+
+  ;; reduce data array to valid data
+  index = WHERE(finite(values),cnt)
+  IF cnt GT 0 THEN BEGIN
+     values = values[index]
+     gvtimes = gvtimes[index]
+     flag = flag[index]
+  ENDIF
 
   IF param NE 'CH4' THEN return
 

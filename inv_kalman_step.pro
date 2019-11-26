@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   inv_determine_aposteriori_brd
+;   inv_kalman_step
 ;
 ; PURPOSE:
 ;
@@ -31,10 +31,10 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
-;                             em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
-;                             Spout=Spout,Qpout=Qpout,Saout=Saout,Hdump=Hdump,$
-;                             zlen=zlen,dllh=dllh,rapriori=rapriori,nobse=nobse
+;  inv_kalman_step,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
+;                   em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
+;                   Spout=Spout,Qpout=Qpout,Saout=Saout,$
+;                   zlen=zlen,dllh=dllh,prelim=prelim,nobse=nobse
 ;
 ; INPUTS:
 ;
@@ -51,8 +51,6 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;       /hdump                         : set this keyword to write out receptor point
-;                                        values (obs, prior, posterior, background)
 ;
 ; OUTPUTS:
 ;
@@ -81,39 +79,35 @@
 ; EXAMPLE:
 ;
 ; MODIFICATION HISTORY:
-; CSP 04 January 2012
-; BRD 20 November 2017: simplified and adjusted to new structure of sim
+; CSP 04 Jan 2012
+; BRD 20 Nov 2017: simplified and adjusted to new structure of sim
+; BRD 05 Jan 2018: adjusted to new netcdf input and ouptut files and renamed
+;                  from inv_determine_aposteriori_brd to inv_kalman_step
 ;-
 
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
-                                  em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
-                                  Spout=Spout,Qpout=Qpout,Saout=Saout,Hdump=Hdump,$
-                                  zlen=zlen,dllh=dllh,rapriori=rapriori,nobse=nobse
-
+PRO inv_kalman_step,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
+                    em3_apost=em3_apost,Spin=Spin,Qpin=Qpin,$
+                    Spout=Spout,Qpout=Qpout,Saout=Saout,$
+                    zlen=zlen,dllh=dllh,prelim=prelim,nobse=nobse
+  
   minalogemiss = -20D           ; minimum log number when an emission is zero
                                 ; this corresponds to 7.5 x 1e-16 Tg/yr, which is
                                 ; a very small number
   IF n_elements(sim) EQ 0 THEN BEGIN
-     print,'Error: structure sim missing in call to inv_determine_aposteriori_brd'
+     print,'Error: structure sim missing in call to inv_kalman_step'
      RETURN
   ENDIF
   
-  print, 'Run inv_determine_aposteriori for ', sim.name, ' ', yyyymm
+  print, 'Run inv_kalman_step for ', sim.name, ' ', yyyymm
 
   ;****************************************************
-  ; read observational data of year and month
+  ; read observation and model data of year and month
   ;****************************************************
-  read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
+  read_obsmod_netcdf_month,sim,yyyymm,ch4obs=ch4obs,ch4mod=ch4mod
 
-  ;****************************************************
-  ;* read in model data from stats for year and month
-  ;****************************************************
-  read_processed_model_data_month,sim,yyyymm,ch4recs=ch4mod
-  IF n_elements(ch4mod) NE n_elements(ch4obs) THEN stop
-  
   ;************************************************************************
   ; In February 2006, model data are only available from 3 February onwards, 
   ; because of the change from lower vertical to higher vertical resolution 
@@ -233,34 +227,14 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
      H[sim.ntrace*3:sim.ntrace*4-1,*] = sensin[*,*,3]
   ENDELSE
   
-  IF keyword_set(Hdump) THEN BEGIN
-     IF keyword_set(sim.flask) THEN BEGIN
-        outfile = sim.hdir+'inv_sensitivity_weekly_flask_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'        
-     ENDIF ELSE BEGIN
-        outfile = sim.hdir+'inv_sensitivity_weekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'      
-        IF keyword_set(sim.special) THEN $
-           outfile = sim.hdir+'inv_sensitivity_weekly_special_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'         
-     ENDELSE
-     openw,lun,outfile,/get_lun  
-     printf,lun,sim.ntrace
-     printf,lun,nc
-     printf,lun,H
-     free_lun,lun
-     outfile2 = sim.hdir+'inv_names_weekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'
-     openw,lun,outfile2,/get_lun
-     FOR i=0,nc-1 DO printf,lun,ch4obs[i].name
-     free_lun,lun
-     outfile3 = sim.hdir+'inv_dates_weekly_'+sim.sn+'_'+sim.name+'_'+yyyymm+'.txt'
-     openw,lun,outfile3,/get_lun
-     FOR i=0,nc-1 DO printf,lun,ch4obs[i].dtg
-     free_lun,lun
-  ENDIF
 
   ;;*********************************************************
   ;; read error covariance matrix (vector) of year and month 
   ;; (only diagonal elements). Unit: ppb^2
   ;;*********************************************************
-  read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,rapriori=rapriori
+  ;read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,prelim=prelim
+  errcov=read_model_data_mismatch_netcdf(sim,prelim=prelim,yyyymm=yyyymm,$
+                                         stats=ch4obs.name)
   R = Diag_Matrix(errcov)
   
   ;;*********************************************************************
@@ -332,6 +306,10 @@ PRO inv_determine_aposteriori_brd,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   ncol = s[1]                   ; number of columns of H
   IF keyword_set(sim.keeppos) THEN FOR j=0,ncol-1 DO H[j,*] = H[j,*]*exp(SAP[j])
   
+  ;;********************************
+  ;; perform Kalman filter step
+  ;;********************************
+
   TM     = Qa ## TRANSPOSE(H)
   M      = H ## TM + R
   Minv   = invert(M)

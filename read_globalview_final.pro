@@ -61,7 +61,7 @@ PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
   ndat = (2008-1984+1)*12L ; number of output dates
   nlat = 41                ; number of latitudes
 
-  file = '/nas/input/GLOBALVIEW-CH4/ref_mbl_mtx.ch4'
+  file = '/project/arf/remote7/ref_mbl_mtx.ch4'
   n    = FILE_LINES(file)
 
   form      = ''

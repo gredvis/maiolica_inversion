@@ -84,18 +84,12 @@ PRO read_apri_apost_fcorr,sim,sa=sa,sp=sp,fcorr=fcorr,prelim=prelim,qpdiag=qpdia
   ENDIF
 
   ;; read a priori, a posteriori and fcorr fields for whole simulation
-  IF keyword_set(prelim) THEN sstr = '_prelim' ELSE sstr = ''
-  IF keyword_set(sim.flask) THEN BEGIN
-     testfile = sim.outdir+'inv_output_weekly_flask'+sstr+'_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                sim.eyyyymm+'_'+sim.qunc+'.txt'
-  ENDIF ELSE BEGIN
-     testfile = sim.outdir+'inv_output_weekly'+sstr+'_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                sim.eyyyymm+'_'+sim.qunc+'.txt'  
-     IF keyword_set(sim.special) THEN BEGIN
-        testfile = sim.outdir+'inv_output_weekly'+sstr+'_special_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                   sim.eyyyymm+'_'+sim.qunc+'.txt'
-     ENDIF
-  ENDELSE
+  sstr = ''
+  IF keyword_set(prelim) THEN sstr = 'prelim_'
+  IF keyword_set(sim.flask) THEN sstr = sstr + 'flask_'
+  IF keyword_set(sim.filter) THEN sstr = sstr + 'filter_'
+  testfile = sim.outdir+'inv_output_weekly_'+sstr+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+             sim.eyyyymm+'_'+sim.qunc+'.txt'
 
   ;; get simulation dates (months) and emission categories
   yyyymm = get_sim_dates(sim)

@@ -151,15 +151,21 @@ PRO read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
   IF cnt NE 0 THEN rname[index] = 'lpo  0'
 
   statind = IntArr(nstat)-1
+  rlist = strsplit(rname,' ',/extract)
+  rlist = rlist.toarray()
+  rlist = strcompress(rlist,/rem)
   FOR i=0,nstat-1 DO BEGIN
-     FOR j=0,nrcpt-1 DO BEGIN
-        stat = strsplit(rname[j],' ',/extract)
-        IF stat[0] EQ sim.stats[i] AND stat[1] EQ sim.stat_levs[i] THEN statind[i]=j
-     ENDFOR
-     IF statind[i] EQ -1 THEN BEGIN
-        print,'station lev',sim.stats[i]+' '+sim.stat_levs[i],' not found in receptor output'
-        stop
+     index = WHERE(rlist[*,0] EQ sim.stats[i] AND rlist[*,1] EQ sim.stat_levs[i],cnt)
+     IF cnt EQ 0 AND sim.stat_levs[i] GT 0. THEN BEGIN
+        ;; try 250 m lower level
+        index = WHERE(rlist[*,0] EQ sim.stats[i] AND rlist[*,1] EQ $
+                      strcompress(fix(sim.stat_levs[i])-250,/rem),cnt)
+        IF cnt GT 0 THEN print,'level for ',sim.stats[i],' shifted by -250 m'
      ENDIF
+     IF cnt EQ 0 THEN BEGIN
+        print,'station lev ',sim.stats[i]+' '+sim.stat_levs[i],' not found in receptor output'
+        stop
+     ENDIF ELSE statind[i] = index[0]
   ENDFOR
   statind = statind[WHERE(statind NE -1)]
 

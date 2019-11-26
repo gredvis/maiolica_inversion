@@ -113,17 +113,18 @@ PRO inv_error_diagonal_weekly_brd,sim,apost=apost
   FOR ij=0,nyears-1 DO BEGIN
 
      print, 'process year ', syear[ij]
-    
-     ;;********************************
-     ;;* 1. read in observational data 
-     ;;********************************
-     read_processed_obs_data_year,sim,syear[ij],ch4obs=ch4obs
 
-     ;;************************************************
-     ;;* read in corresponding model data
-     ;;************************************************
-     read_processed_model_data_year,sim,syear[ij],ch4recs=ch4mod
-     
+     ;; new version with netcdf files
+     mm = STRING(indgen(12)+1,format='(i2.2)')
+     FOR m = 0,11 DO BEGIN
+        read_obsmod_netcdf_month,sim,syear[ij]+mm[m],ch4obs=ch4tmp,ch4mod=ch4modtmp
+        IF m EQ 0 THEN BEGIN
+           ch4obs=ch4tmp & ch4mod=ch4modtmp
+        ENDIF ELSE BEGIN
+           ch4obs=[ch4obs,ch4tmp] & ch4mod=[ch4mod,ch4modtmp]
+        ENDELSE
+     ENDFOR
+
      IF keyword_set(apost) THEN BEGIN
         FOR i=0,nmonths-1 DO BEGIN
            yyyymm=syear[ij]+mon[i]
@@ -186,7 +187,7 @@ PRO inv_error_diagonal_weekly_brd,sim,apost=apost
   suffix = ''
   IF keyword_set(apost) THEN suffix='aposteriori_'
   IF sim.flask THEN suffix = suffix + 'flask_'
-  IF sim.nobg THEN suffix = suffix + 'nobg_'
+  IF sim.filter THEN suffix = suffix + 'filter_'
 
   filemean = sim.errcovdir+'inv_errorcovariance_stations_'+suffix+$
              sim.sn+'_'+sim.name+'_mean.dat' 
@@ -205,7 +206,9 @@ PRO inv_error_diagonal_weekly_brd,sim,apost=apost
         
         yyyymm = syear[ij]+mon[im]
         
-        read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
+        ;; new version with netcdf files
+        read_obsmod_netcdf_month,sim,yyyymm,ch4obs=ch4obs
+        ;;read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
         
         IF syear[ij] eq '2006' and im eq 1 THEN BEGIN
            ;; due to switch in vertical model levels, first days in Feb 2006 are missing

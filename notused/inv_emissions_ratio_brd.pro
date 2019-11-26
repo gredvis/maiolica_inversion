@@ -23,17 +23,14 @@ PRO inv_emissions_ratio_brd,sim
 
   ; read apriori and aposteriori emissions ...
   IF keyword_set(flask) THEN BEGIN
-    IF keyword_set(nobg) THEN $
-    apostfile = sim.outdir+'inv_output_weekly_flask_nobg_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                sim.eyyyymm+'_'+sim.qunc+'_nov12.txt' $
-    ELSE apostfile = sim.outdir+'inv_output_weekly_flask_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                sim.eyyyymm+'_'+sim.qunc+'_nov12.txt' 
+     apostfile = sim.outdir+'inv_output_weekly_flask_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                 sim.eyyyymm+'_'+sim.qunc+'.txt' 
   ENDIF ELSE BEGIN
-    apostfile = sim.outdir+'inv_output_weekly_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_nov12.txt'  
-    IF keyword_set(nobg) THEN $
-    apostfile = sim.outdir+'inv_output_weekly_nobg_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_nov12.txt'
-    IF keyword_set(special) THEN $
-    apostfile = sim.outdir+'inv_output_weekly_special_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+sim.eyyyymm+'_'+sim.qunc+'_nov12.txt'    
+    apostfile = sim.outdir+'inv_output_weekly_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                sim.eyyyymm+'_'+sim.qunc+'.txt' 
+    IF keyword_set(sim.filter) THEN $
+    apostfile = sim.outdir+'inv_output_weekly_filter_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
+                sim.eyyyymm+'_'+sim.qunc+'.txt'    
   ENDELSE                
                 
   openr,lun,apostfile,/get_lun
@@ -71,16 +68,12 @@ PRO inv_emissions_ratio_brd,sim
     print, cyyyymm
   
     ; read weekly model data of given year and month
-    IF keyword_set(flask) THEN BEGIN
-      IF keyword_set(nobg) THEN $
-           modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_flask_nobg_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat' $      
-      ELSE modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'
+    IF keyword_set(sim.flask) THEN BEGIN
+       modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'
     ENDIF ELSE BEGIN
-      modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'    
-      IF keyword_set(nobg) THEN $
-           modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_nobg_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'
-      IF keyword_set(special) THEN $
-           modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_special_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'    
+       modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'    
+      IF keyword_set(sim.filter) THEN $
+           modfile = '/nas/arf/INVERSION/FINAL/m_allweekly_filter_'+sim.sn+'_'+sim.name+'_'+cyyyymm+'.dat'    
     ENDELSE
     line    = ''
     openr,lun1,modfile,/get_lun
@@ -204,16 +197,15 @@ ENDFOR
       asum[l,i] = total(atotteil[l,*])
     ENDFOR 
               
-    IF keyword_set(flask) THEN BEGIN
-      IF keyword_set(nobg) THEN $
-      outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_flask_nobg_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat' $      
-      ELSE outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_flask_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat'
+    IF keyword_set(sim.flask) THEN BEGIN
+       outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_flask_'+sim.sn+'_'+sim.name+$
+                 '_'+sim.qunc+'_'+cyyyymm+'.dat'
     ENDIF ELSE BEGIN
-      outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat'    
-      IF keyword_set(nobg) THEN $
-      outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_nobg_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat'
-      IF keyword_set(special) THEN $
-      outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_special_'+sim.sn+'_'+sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat'      
+       outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_'+sim.sn+'_'+sim.name+'_'+$
+                 sim.qunc+'_'+cyyyymm+'.dat'    
+       IF keyword_set(sim.filter) THEN $
+          outfile = '/nas/arf/INVERSION/FINAL/m_weekly_apost_categories_filter_'+sim.sn+'_'+$
+                    sim.name+'_'+sim.qunc+'_'+cyyyymm+'.dat'      
     ENDELSE
     print, outfile
     openw,lun2,outfile,/get_lun

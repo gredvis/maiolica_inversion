@@ -314,7 +314,7 @@ PRO collect_data,sim,stats,contri,type,year,$
      print,'processing station ',station,' of type ',type,' for year ',year
      read_wdcgg_brd,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
                     gvtimes=gvtimes,values=ch4,flag=flag,ndata=ndata,$
-                    characteristics=characteristics,brw=sim.brw,special=sim.special,$
+                    characteristics=characteristics,filter=sim.filter,$
                     statfilt=sim.statfilt
 
      dtg = gvtime2dtg(gvtimes)  ; date/times in format YYYYMMDDhhmm
@@ -409,8 +409,32 @@ END
 ;******************************************************
 PRO inv_obsvector_mon_weekly_brd,sim
 
-  ;; get list of stations for this simulation
-  inv_stat_definitions_brd,sim,scont=scont,ccont=ccont,sflask=sflask,cflask=cflask,sagage=sagage
+  ;; create lists of flask, continuous and agage sites
+  FOR i=0,n_elements(sim.stats)-1 DO BEGIN
+     ;; create list of flask, continuous and agage sites
+     sinfo = station_info(sim.stats[i])
+     IF sinfo.flask THEN BEGIN
+        IF n_elements(sflask) EQ 0 THEN BEGIN
+           sflask = sinfo.id & cflask = sinfo.flasknetwork
+        ENDIF ELSE BEGIN
+           sflask = [sflask,sinfo.id] & cflask = [cflask,sinfo.flasknetwork]
+        ENDELSE
+     ENDIF
+     IF sinfo.continuous THEN BEGIN
+        IF n_elements(scont) EQ 0 THEN BEGIN
+           scont = sinfo.id & ccont = sinfo.contnetwork
+        ENDIF ELSE BEGIN
+           scont = [scont,sinfo.id] & ccont = [ccont,sinfo.contnetwork]
+        ENDELSE
+     ENDIF
+     IF sinfo.agage THEN BEGIN
+        IF n_elements(sagage) EQ 0 THEN BEGIN
+           sagage = sinfo.id
+        ENDIF ELSE BEGIN
+           sagage = [sagage,sinfo.id]
+        ENDELSE
+     ENDIF
+  ENDFOR
   
   nflask = n_elements(sflask)
   ncont = n_elements(scont)
@@ -518,8 +542,7 @@ PRO inv_obsvector_mon_weekly_brd,sim
               fileout = dirout+'z_allweekly_flask_'+sn+'_'+year+umm[i]+'.dat'
            ENDIF ELSE BEGIN
               fileout = dirout+'z_allweekly_'+sn+'_'+year+umm[i]+'.dat'             
-              IF keyword_set(sim.special) THEN fileout = dirout+'z_allweekly_special_'+sn+'_'+year+umm[i]+'.dat'
-              IF keyword_set(sim.brw) THEN     fileout = dirout+'z_allweekly_brwnobg_'+sn+'_'+year+umm[i]+'.dat' 
+              IF keyword_set(sim.filter) THEN fileout = dirout+'z_allweekly_filter_'+sn+'_'+year+umm[i]+'.dat'
            ENDELSE
            print, fileout
            openw,lun,fileout,/get_lun

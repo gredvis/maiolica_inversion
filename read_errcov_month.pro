@@ -5,11 +5,9 @@
 ;
 ; PURPOSE:
 ;
-;   Read in monthly mean model mismatches at the stations, which are
-;   stored in files
+;   Read in monthly mean model mismatches at the stations stored in files
 ;      inv_errorcovariance_stations_wm_mismatchonly_xx_YYYYMM.dat
-;   for the uncertainties calculated based on the a priori data
-;   or 
+;   for the uncertainties calculated based on the a priori data or 
 ;      inv_errorcovariance_stations_wm_mismatchonly_aposteriori_flask_xx_YYYYMM.dat
 ;   for the uncertainties calculated after the first inversion
 ; 
@@ -22,7 +20,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,rapriori=rapriori
+;   read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,prelim=prelim
 ;
 ; INPUTS:
 ;
@@ -32,7 +30,7 @@
 ;
 ; KEYWORD PARAMETERS:
 ;
-;  /rapriori                     : set this keyword to read in mismatches of a priori
+;  /prelim                     : set this keyword to read in mismatches of a priori
 ;                                  model simulation
 ;
 ; OUTPUTS:
@@ -69,7 +67,7 @@
 ;   DB, 23 Nov 2017: first implementation
 ;-
 
-PRO read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,rapriori=rapriori
+PRO read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,prelim=prelim
  
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
@@ -86,33 +84,15 @@ PRO read_errcov_month,sim,yyyymm,errcov=errcov,stats=stats,rapriori=rapriori
   ;; of year and month (only diagonal elements)
   ;; Unit: ppb^2
   ;;*********************************************************
-  IF keyword_set(rapriori) THEN BEGIN
-     IF keyword_set(sim.flask) THEN BEGIN
-        IF keyword_set(sim.nobg) THEN $
-           errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_flask_nobg_'+$
-                       sim.sn+'_'+sim.name+'_'+yyyymm+'.dat' $        
-        ELSE errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_flask_'+$
-                         sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'
-     ENDIF ELSE BEGIN
-        errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_'+$
-                    sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'      
-        IF keyword_set(sim.special) THEN $
-           errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_special_'+$
-                       sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'       
-     ENDELSE
-  ENDIF ELSE BEGIN    
-     IF keyword_set(sim.flask) THEN BEGIN
-        errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_aposteriori_flask_'+$
-                    sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'         
-     ENDIF ELSE BEGIN
-        errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_aposteriori_'+$
-                    sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'      
-        IF keyword_set(sim.special) THEN $
-           errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_aposteriori_special_'+$
-                       sim.sn+'_'+sim.name+'_'+yyyymm+'.dat'
-     ENDELSE
-  ENDELSE    
+  sstr = sim_filename_str(sim,prelim=prelim)
 
+  sstr = 'filter_89stats_final_sim01_'
+
+  errorfile = sim.errcovdir+'inv_errorcovariance_stations_wm_mismatchonly_'+$
+              sstr+yyyymm+'.dat'
+
+  IF file_test(errorfile) EQ 0 THEN stop
+  
   header    = '' & dummy = header
   n         = FILE_LINES(errorfile)-1 ; number of data lines by subtracting the header line
   stats     = StrArr(n)

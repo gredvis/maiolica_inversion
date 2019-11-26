@@ -1,11 +1,11 @@
 ;+
 ; NAME:
 ;
-;   plot_xhisquare_statistics
+;   plot_chisquare_statistics
 ;
 ; PURPOSE:
 ;
-;   Create a plot of the xhisquare statistics and print mean zlen (should be around 1)
+;   Create a plot of the chisquare statistics and print mean zlen (should be around 1)
 ;   and total log-likelihood (should be as large as possible)
 ;
 ; CATEGORY:
@@ -14,7 +14,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  plot_xhisquare_statistics,sim,s2=s2,rapriori=rapriori,eps=eps
+;  plot_chisquare_statistics,sim,s2=s2,rapriori=rapriori,eps=eps
 ;
 ; INPUTS:
 ;
@@ -26,7 +26,7 @@
 ;  /rapriori         : set this keyword to plot statistics for first inversion based
 ;                      on model-data mismatches calculated fror a priori simulation
 ;  /eps              : set this keyword to create postscript files in 
-;                      sim.basedir + 'FIGURES/XHISTATS/'
+;                      sim.basedir + 'FIGURES/CHISTATS/'
 ;
 ; OUTPUTS:
 ;
@@ -51,7 +51,7 @@
 ; EXAMPLE:
 ;
 ;   sim = inv_configurations_brd(run='28.4',sconfig='flask_DLR2',ok=ok)
-;   plot_xhisquare_statistics,sim=sim
+;   plot_chisquare_statistics,sim=sim
 ;
 ; MODIFICATION HISTORY:
 ; 
@@ -59,35 +59,27 @@
 ;   Swiss Federal Laboratories for Materials Science and Technology
 ;   Empa Duebendorf, Switzerland
 ;
-;   DB, 27 Dec 2007:  first implementation
+;   DB, 27 Dec 2017: first implementation
+;   DB, 06 Jan 2018: adjusted to new netcdf output
 ;-
-PRO plot_xhisquare_statistics,sim,s2=s2,rapriori=rapriori,eps=eps
+PRO plot_chisquare_statistics,sim,s2=s2,prelim=prelim,eps=eps
 
-  IF keyword_set(rapriori) THEN xifile=sim.outdir+'xi_statstics_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                                      sim.eyyyymm+'_'+sim.qunc+'_apriori.txt'
+  IF n_elements(sim) EQ 0 THEN RETURN
   
-  IF NOT keyword_set(rapriori) THEN xifile=sim.outdir+'xi_statstics_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'-'+$
-                                           sim.eyyyymm+'_'+sim.qunc+'_.txt'
-  
-  psdir = sim.basedir + 'FIGURES/XHISTAT/'
-
-  yyyymm = get_yyyymm(sim)
-  gvt = dtg2gvtime(yyyymm)
-  nl = n_elements(gvt)
-
-  zlen= FltArr(nl)
-  nobse = FltARr(nl)
-  dllh = FltArr(nl)
-  openr,lun,xifile,/get_lun
-  readf,lun,zlen
-  readf,lun,nobse
-  readf,lun,dllh
-  free_lun,lun
+  psdir = sim.basedir + 'FIGURES/CHISTAT/'
 
   xrange = dtg2gvtime(['19900101','20130101'])
 
+  result = read_inv_results_netcdf(sim,prelim=prelim,/statonly)
+  IF size(result,/type) EQ 2 THEN RETURN
+  zlen = result.zlen
+  dllh = result.dllh
+  nobse = result.nobs
+  yyyymm = result.yyyymm
+  gvt = dtg2gvtime(yyyymm+'01')
+
   IF keyword_set(eps) THEN BEGIN
-     figname = 'xhisquare_'+sim.sn+'_'+sim.name+'_'+string(sim.syyyymm,format='(i6)')+'_'+$
+     figname = 'chisquare_'+sim.sn+'_'+sim.name+'_'+string(sim.syyyymm,format='(i6)')+'_'+$
                STRING(sim.eyyyymm,format='(i6)')+'_'+sim.qunc+'.eps'
      filename = psdir+figname
      open_ps,filename,/eps,/color,pssize=[16,12],tt_type='Helvetica'
@@ -111,30 +103,22 @@ PRO plot_xhisquare_statistics,sim,s2=s2,rapriori=rapriori,eps=eps
 
   IF n_elements(s2) NE 0 AND NOT keyword_set(eps) THEN BEGIN
 
-     IF keyword_set(rapriori) THEN xifile=s2.outdir+'xi_statstics_'+s2.sn+'_'+s2.name+'_'+s2.syyyymm+'-'+$
-                                          s2.eyyyymm+'_'+s2.qunc+'_apriori.txt'
-     
-     IF NOT keyword_set(rapriori) THEN xifile=s2.outdir+'xi_statstics_'+s2.sn+'_'+s2.name+'_'+s2.syyyymm+'-'+$
-                                              s2.eyyyymm+'_'+s2.qunc+'_.txt'
-     
-     zlen2= FltArr(nl)
-     nobse2 = FltARr(nl)
-     dllh2 = FltArr(nl)
-     openr,lun,xifile,/get_lun
-     readf,lun,zlen2
-     readf,lun,nobse2
-     readf,lun,dllh2
-     free_lun,lun    
+     result = read_inv_results_netcdf(sim2,prelim=prelim,/statonly)
+     IF size(result,/type) EQ 2 THEN RETURN
+     zlen2 = result.zlen
+     dllh2 = result.dllh
+     nobse2 = result.nobs
+     yyyymm = result.yyyymm
 
      plot_tseries,gvt,zlen2,color=red,/over
 
   ENDIF
 
   IF n_elements(s2) EQ 0 OR keyword_set(eps) THEN BEGIN
-     axis,/yaxis,/save,yrange=[0,250],ytitle='Observations N!Di',charsize=chs,color=red
+     axis,/yaxis,/save,yrange=[0,350],ytitle='Observations N!Di',charsize=chs,color=red
      plot_tseries,gvt,nobse,thick=linethick,/over,color=red
   ENDIF ELSE BEGIN
-     axis,/yaxis,/save,yrange=[0,200],ytitle='Observations N!Di',charsize=chs
+     axis,/yaxis,/save,yrange=[0,300],ytitle='Observations N!Di',charsize=chs
      plot_tseries,gvt,nobse,thick=linethick,/over,linestyle=2
   ENDELSE
      

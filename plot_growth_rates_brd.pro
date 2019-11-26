@@ -43,19 +43,24 @@
 ;   Dominik Brunner (DB), Empa
 ;   DB, 17 Dec 2017: first implementation, modified version of Tina Schnadt's
 ;                    plot_station_methane_categories_MAIOLICA_apriori
+;   DB, 06 Jan 2018: added keyword /prelim to allow plotting results of preliminary inversion
 ;-
 
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO plot_growth_rates_brd,sim,eps=eps
+PRO plot_growth_rates_brd,sim,prelim=prelim,sort=sort,eps=eps
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
      RETURN
   ENDIF
   
-  load_ctb,'ive.ctb'
+  IF keyword_set(sort) THEN BEGIN
+     load_ctb,'/home/brd134/IDL/arfeuille_final/maiolica_emiss_categories.ctb'
+  ENDIF ELSE BEGIN
+     load_ctb,'ive.ctb'
+  ENDELSE
 
   IF keyword_set(eps) THEN BEGIN
      psdir = sim.basedir + 'FIGURES/GROWTHRATES/'
@@ -74,65 +79,21 @@ PRO plot_growth_rates_brd,sim,eps=eps
 
   IF n_elements(syyyy) EQ 0 THEN syyyy = STRMID(sim.syyyymm,0,4)
   IF n_elements(eyyyy) EQ 0 THEN eyyyy = STRMID(sim.eyyyymm,0,4)
-
-  basedir  = sim.obsdir
-  modeldir = sim.modeldir+sim.name+'/'
   
+  ;; read observations and prior and posterior model output at all stations
+  read_inv_station_output_netcdf,sim,prelim=prelim,yyyymm=yyyymm,ndata=ndata,$
+                                 ch4obs=ch4obs,ch4apri=ch4apri,ch4post=ch4apost,$
+                                 catapri=ch4apri_cat,catpost=ch4apost_cat,$
+                                 cats=cats,stats=stats,ok=ok
+
+  IF NOT ok THEN RETURN
+
   ;; Create data arrays
   nst      = n_elements(sim.stats)
   nmonths  = 12
   mon      = STRING(indgen(12)+1,format='(i2.2)')
   nyears   = long(fix(eyyyy)-fix(syyyy)+1)
-  ntot     = nyears*nmonths
-  ch4obs   = Fltarr(ntot,nst)+!values.f_nan
-  ch4apri  = Fltarr(ntot,nst)+!values.f_nan
-  ch4apost = Fltarr(ntot,nst)+!values.f_nan
-  ch4apri_cat = Fltarr(ntot,sim.ntrace,nst)+!values.f_nan
-  ch4apost_cat = Fltarr(ntot,sim.ntrace,nst)+!values.f_nan
-
-  ndata    = IntArr(ntot,nst)
-  yyyymm   = StrArr(ntot)
- 
-  ;; loop over the years and months and get observation and model data
-  cnt = 0L
-  FOR y = 0,nyears-1 DO BEGIN
-     yyyy = STRING(fix(syyyy)+y,format='(i4)')
-     FOR m = 0,nmonths-1 DO BEGIN
-        ind = y*nmonths+m
-        mm = mon[m]
-        yyyymm[ind]=yyyy+mm
-        read_processed_obs_data_month,sim,yyyymm[ind],ch4obs=ch4tmp
-        read_processed_model_data_month,sim,yyyymm[ind],ch4recs=ch4mod
-        inv_calculate_posterior_tseries,sim,yyyymm[ind],ch4obs=ch4tmp,ch4apri=ch4mod,$
-                                        sa=sa,sp=sp,fcorr=fcorr,ch4post=ch4post
-
-        ;; loop over the stations and assign values
-        FOR i=0,nst-1 DO BEGIN
-           index = WHERE(ch4tmp.name EQ sim.stats[i],cnt)
-           IF cnt GT 1 THEN BEGIN
-              ch4obs[ind,i]=mean(ch4tmp[index].ch4,/nan)
-              ch4apri[ind,i]=mean(ch4mod[index].ch4,/nan)
-              ch4apost[ind,i]=mean(ch4post[index].ch4,/nan)
-              ;; total per category
-              FOR k=0,sim.ntrace-1 DO BEGIN
-                 catind = indgen(sim.nage)*sim.ntrace+k
-                 ch4apri_cat[ind,k,i]=mean(total(ch4mod[index].ch4trace[catind],1),/nan)
-                 ch4apost_cat[ind,k,i]=mean(total(ch4post[index].ch4trace[catind],1),/nan)
-              ENDFOR
-           ENDIF ELSE IF cnt EQ 1 THEN BEGIN
-              ch4obs[ind,i]=ch4tmp[index].ch4
-              ch4apri[ind,i]=ch4mod[index].ch4
-              ch4apost[ind,i]=ch4post[index].ch4
-              FOR k=0,sim.ntrace-1 DO BEGIN
-                 catind = indgen(sim.nage)*sim.ntrace+k
-                 ch4apri_cat[ind,k,i]=total(ch4mod[index].ch4trace[catind])
-                 ch4apost_cat[ind,k,i]=total(ch4post[index].ch4trace[catind])
-              ENDFOR
-           ENDIF
-           ndata[ind,i]=cnt
-        ENDFOR
-     ENDFOR
-  ENDFOR
+  ntot = n_elements(yyyymm)
 
   gvt = dtg2gvtime(yyyymm)
 
@@ -225,9 +186,16 @@ PRO plot_growth_rates_brd,sim,eps=eps
      tind = WHERE(yyyymm GE 199007 AND yyyymm LE 201206)
      
      ;; emission categories and colors
-     cat = emiss_categories()
-     col = emiss_colors()
-     
+     IF keyword_set(sort) THEN BEGIN
+        sort_emiss_categories,ocats=cat,oind=oind,ocol=col
+        grey=99B 
+     ENDIF ELSE BEGIN
+        cat = emiss_categories()
+        col = emiss_colors()
+        oind = indgen(n_elements(cat))
+        grey = cgcolor("LIGHTGRAY")
+     ENDELSE
+
      xthick = 2 & ythick = 2 & linethick=2
      IF keyword_set(eps) THEN BEGIN
         figname = 'ch4_growth_rate_'+sim.sn+'_'+sim.name+'_'+string(syyyy,format='(i4)')+'_'+$
@@ -247,7 +215,7 @@ PRO plot_growth_rates_brd,sim,eps=eps
      ;; plot time series of monthly growth rates
      plot_tseries,gvt[tind],dch4obs[tind],position=pos1,yrange=yrange,charsize=chs,noerase=noerase,$
                   /shades,xshade=365.25D,ytitle=ytitle,xtitle='',xthick=xthick,ythick=ythick,$
-                  thick=linethick,/nodata,grey=cgcolor("LIGHTGRAY"),xstyle=5,ystyle=5,xrange=xrange
+                  thick=linethick,/nodata,grey=grey,xstyle=5,ystyle=5,xrange=xrange
      
      ;; loop over source categories and plot accumulated contributions
      posacc = FltArr(ntot)
@@ -258,12 +226,12 @@ PRO plot_growth_rates_brd,sim,eps=eps
      time = gvt + basetime
      
      FOR k=0,sim.ntrace-2 DO BEGIN
-        pind  = WHERE(dch4apri_cat[*,k] GT 0.,cpos)
-        IF cpos GT 0 THEN posacc[pind] = posacc[pind] + dch4apri_cat[pind,k]
+        pind  = WHERE(dch4apri_cat[*,oind[k]] GT 0.,cpos)
+        IF cpos GT 0 THEN posacc[pind] = posacc[pind] + dch4apri_cat[pind,oind[k]]
         polyfill,[time[tind],reverse(time[tind])],[lastposacc[tind],reverse(posacc[tind])],color=col[k]
         lastposacc = posacc
-        nind  = WHERE(dch4apri_cat[*,k] LT 0.,cneg)
-        IF cneg GT 0 THEN negacc[nind] = negacc[nind] + dch4apri_cat[nind,k]
+        nind  = WHERE(dch4apri_cat[*,oind[k]] LT 0.,cneg)
+        IF cneg GT 0 THEN negacc[nind] = negacc[nind] + dch4apri_cat[nind,oind[k]]
         polyfill,[time[tind],reverse(time[tind])],[lastnegacc[tind],reverse(negacc[tind])],color=col[k]
         lastnegacc = negacc
      ENDFOR
@@ -282,7 +250,7 @@ PRO plot_growth_rates_brd,sim,eps=eps
      ;; plot time series of monthly growth rates
      plot_tseries,gvt[tind],dch4obs[tind],position=pos1,yrange=yrange,charsize=chs,/noerase,$
                   /shades,xshade=365.25D,ytitle=ytitle,xtitle='',xthick=xthick,ythick=ythick,$
-                  thick=linethick,/nodata,grey=cgcolor("LIGHTGRAY"),xstyle=5,ystyle=5,xrange=xrange
+                  thick=linethick,/nodata,grey=grey,xstyle=5,ystyle=5,xrange=xrange
      
      ;; loop over source categories and plot accumulated contributions
      posacc = FltArr(ntot)
@@ -293,12 +261,12 @@ PRO plot_growth_rates_brd,sim,eps=eps
      time = gvt + basetime
      
      FOR k=0,sim.ntrace-2 DO BEGIN
-        pind  = WHERE(dch4apost_cat[*,k] GT 0.,cpos)
-        IF cpos GT 0 THEN posacc[pind] = posacc[pind] + dch4apost_cat[pind,k]
+        pind  = WHERE(dch4apost_cat[*,oind[k]] GT 0.,cpos)
+        IF cpos GT 0 THEN posacc[pind] = posacc[pind] + dch4apost_cat[pind,oind[k]]
         polyfill,[time[tind],reverse(time[tind])],[lastposacc[tind],reverse(posacc[tind])],color=col[k]
         lastposacc = posacc
-        nind  = WHERE(dch4apost_cat[*,k] LT 0.,cneg)
-        IF cneg GT 0 THEN negacc[nind] = negacc[nind] + dch4apost_cat[nind,k]
+        nind  = WHERE(dch4apost_cat[*,oind[k]] LT 0.,cneg)
+        IF cneg GT 0 THEN negacc[nind] = negacc[nind] + dch4apost_cat[nind,oind[k]]
         polyfill,[time[tind],reverse(time[tind])],[lastnegacc[tind],reverse(negacc[tind])],color=col[k]
         lastnegacc = negacc
      ENDFOR
@@ -308,7 +276,7 @@ PRO plot_growth_rates_brd,sim,eps=eps
      
      plot_tseries,gvt[tind],dch4apost[tind],/over,thick=linethick,color=cgcolor("RED")
      
-     plot_category_legend,position=[0,0.1,0.3,0.9]
+     plot_category_legend,position=[0,0.1,0.3,0.9],sort=sort
      
      IF keyword_set(eps) THEN close_ps
 

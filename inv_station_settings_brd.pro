@@ -81,7 +81,7 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
         ufact[10] = 100.
         ufact[11] = 100.
      END
-     'flask_DLR1': BEGIN        ; NOAA flask network but without smo,ice,sis,amt
+     'flask_DLR1': BEGIN        ; 69 stations, NOAA flask network but without smo, ice, sis, amt
         stats  =   [   'alt',   'brw',   'mhd',   'mlo',   'rpb',   'thd',   'wsa',   'cgo',   'izo',$
                        'zep',   'sum',$
                        'ter',   'pal',   'cba',   'bal',   'shm',   'oxk',   'lpo',   'esp',$
@@ -93,8 +93,9 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
         nstats = n_elements(stats)
         ufact  = FltArr(nstats) + 1.
      END
-     'flask_DLR2': BEGIN        ; NOAA flask network but without smo,ice,sis,amt and LPO,BSC,WKT removed
-                                ; probably the one finally used for publication!!
+     'flask_DLR2': BEGIN        ; 62 stats: NOAA flask network but without smo (Samoa),ice (Storhofdi Iceland),
+                                ; sis (Shettland Lerwick),amt (Argyle), lpo (Ile Grande),
+                                ; bsc (black sea), wkt (Moody) removed, probably the one used for publication!!
         stats  =   [   'alt',   'brw',   'mhd',   'mlo',   'rpb',   'thd',   'wsa',   'cgo',   'izo',$
                        'zep',   'sum',$
                        'ter',   'pal',   'cba',   'bal',   'shm',   'oxk', 'esp',$
@@ -106,8 +107,8 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
         nstats = n_elements(stats)
         ufact  = FltArr(nstats) + 1.
      END
-     'all': BEGIN               ; all 91 stations including data from 34 continuous stations, until 'cgo'
-
+     'all': BEGIN               ; all 93 stations including data from 34 continuous stations, until 'cgo'
+                                ; Note: station tdf (Tierra del Fuego) is now ush (Ushuaia)
         stats  =   [   'alt',   'brw',   'llb',   'cdl',   'zgt',   'etl',   'kmw',   'mhd',   'ngl',$
                        'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
                        'ryo',   'amy',   'tkb',   'izo',   'hat',   'mnm',   'yon',   'mlo',   'rpb',   'smo',$
@@ -117,7 +118,7 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
                        'tap',   'wlg',   'lmp',   'bmw',   'bme',   'wkt',   'wis',   'key',   'ask',   'lln',$
                        'kum',   'cri',   'gmi',   'abp',   'chr',   'bkt',   'mkn',   'sey',   'asc',   'cfa',$
                        'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
-                       'cya',   'syo',   'hba']
+                       'cya',   'syo',   'hba',   'chm',   'goz']
                    
         enh     = 1.      
         ufact   = [       1.,      1.,     enh,      1.,     enh,     enh,     enh,      1.,      1.,$
@@ -129,53 +130,48 @@ PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
                           1.,      1.,      1.,      1.,     enh,      1.,      1.,      1.,      1.,     enh,$
                           1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,$
                           1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,$
-                          1.,      1.,      1.]      
-
-        nstats = n_elements(stats)
-        ufact  = FltArr(nstats) + 1.
-
-        ;; ; Test less weigth antarctica
-        ;; ufact[81:90] =100.0
-        
-        ;; ; TEST less weigth tropics
-        ;; ufact[26] =100.0   ;mlo
-        ;; ufact[65] =100.0   ;key
-        ;; ufact[70] =100.0   ;gmi
-        ;; ufact[72] =100.0   ;chr
-        ;; ufact[75] =100.0   ;sey
-        ;; ufact[76] =100.0   ;asc 
-        
-        ;; ; TEST less weigth except high lat
-        ;;ufact[*] =100.0 ;mlo
-        ;;ufact[0]=1.0
-        ;;ufact[1]=1.0
-        ;;ufact[37]=1.0   
-        ;;ufact[39]=1.0   ;shm
-        ;;ufact[81:90] =1.0
+                          1.,      1.,      1.,      1.,      1.]
      END
-     'special': BEGIN ; same as 'all' but excluding sites llb, kmw, bkt (total 88 sites)
-      stats  =   [   'alt',   'brw',            'cdl',   'zgt',   'etl',            'mhd',   'ngl',$
-                     'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
-                     'ryo',   'amy',   'tkb',   'izo',   'hat',   'mnm',   'yon',   'mlo',   'rpb',   'smo',$
-                     'cpt',   'cgo',   'zep',   'sum',   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',$
-                     'shm',   'oxk',   'lpo',   'esp',   'hpb',   'hun',   'puy',   'lef',   'amt',   'bsc',$
-                     'kzd',   'uum',   'pdm',   'bgu',   'nwr',   'uta',   'azr',   'pta',   'sgp',$
-                     'tap',   'wlg',   'lmp',   'bmw',   'bme',   'wkt',   'wis',   'key',   'ask',   'lln',$
-                     'kum',   'cri',   'gmi',   'abp',   'chr',            'mkn',   'sey',   'asc',   'cfa',$
-                     'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
-                     'cya',   'syo',   'hba']
-                   
-      enh     = 1.
-      ufact   = [       1.,      1.,      1.,     enh,     enh,      1.,      1.,$
-                        enh,      1.,     enh,      1.,     enh,     enh,     enh,      1.,     enh,      1.,$
-                        1.,     enh,     enh,      1.,     enh,      1.,      1.,     enh,      1.,      1.,$
-                        1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,     enh,$
-                        1.,     enh,     enh,      1.,      1.,      1.,     enh,     enh,      1.,     enh,$
-                        enh,      1.,      1.,      enh,      1.,     enh,      1.,     enh,     enh,$
-                        1.,      1.,      1.,      1.,     enh,      1.,      1.,      1.,      1.,     enh,$
-                        1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,$
-                        1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.,$
-                        1.,      1.,      1.]                                            
+     'brd': BEGIN               
+        ;; same as 'all' but excluding
+        ;; Kollumerwaard (kmw): large local influence that cannot be reproduced
+        ;; Black Sea (bsc): large local influence that cannot be reproduced
+        ;; Tsukuba (tkb): poor correlation, large bias, unknown calibration scale
+        ;; Dwejra (goz): only few years, not included in DLR output
+        ;; Other sites that could potentially be removed: 
+        ;;  Anmyeon-Do (amy): poor correlation before 2009, strange pos and neg peaks
+        ;;  Moody (wkt): quite strong underestimation. Scot Miller reports strong 
+        ;;              underestimation of emissions in this area by EDGAR.
+        ;;  Sable Island (wsa): poor correlation, wrong seasonal cyle, really strange
+        ;;  Argyle (amt): strong overestimation by model in summer, possibly because it
+        ;;              is a 100m tower but model is evaluated at surface.
+        ;;  Bukit Koto Tabang (bkt): wildfire influence in model seems overestimation
+        ;; Note: station tdf has been renamed by NOAA to ush (Ushuaia)
+        stats  =   [   'alt',   'brw',   'llb',   'cdl',   'zgt',   'etl',            'mhd',   'ngl',$
+                       'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
+                       'ryo',   'amy',            'izo',   'hat',   'mnm',   'yon',   'mlo',   'rpb',   'smo',$
+                       'cpt',   'cgo',   'zep',   'sum',   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',$
+                       'shm',   'oxk',   'lpo',   'esp',   'hpb',   'hun',   'puy',   'lef',   'amt',   $
+                       'kzd',   'uum',   'pdm',   'bgu',   'nwr',   'uta',   'azr',   'pta',   'sgp',$
+                       'tap',   'wlg',   'lmp',   'bmw',   'bme',   'wkt',   'wis',   'key',   'ask',   'lln',$
+                       'kum',   'cri',   'gmi',   'abp',   'chr',   'bkt',   'mkn',   'sey',   'asc',   'cfa',$
+                       'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
+                       'cya',   'syo',   'hba',   'chm']
+        
+        ufact = 1. + FltArr(n_elements(stats))
+     END
+     'special': BEGIN           ; same as 'all' but excluding sites llb, kmw, bkt (total 88 sites)
+        stats  =   [   'alt',   'brw',            'cdl',   'zgt',   'etl',            'mhd',   'ngl',$
+                       'deu',   'fsd',   'ssl',   'jfj',   'zsf',   'prs',   'egb',   'wsa',   'coi',   'thd',$
+                       'ryo',   'amy',   'tkb',   'izo',   'hat',   'mnm',   'yon',   'mlo',   'rpb',   'smo',$
+                       'cpt',   'cgo',   'zep',   'sum',   'ter',   'pal',   'ice',   'sis',   'cba',   'bal',$
+                       'shm',   'oxk',   'lpo',   'esp',   'hpb',   'hun',   'puy',   'lef',   'amt',   'bsc',$
+                       'kzd',   'uum',   'pdm',   'bgu',   'nwr',   'uta',   'azr',   'pta',   'sgp',$
+                       'tap',   'wlg',   'lmp',   'bmw',   'bme',   'wkt',   'wis',   'key',   'ask',   'lln',$
+                       'kum',   'cri',   'gmi',   'abp',   'chr',            'mkn',   'sey',   'asc',   'cfa',$
+                       'nmb',   'eic',   'ams',   'maa',   'arh',   'bhd',   'crz',   'mqa',   'tdf',   'psa',$
+                       'cya',   'syo',   'hba']
+        ufact = 1. + FltArr(n_elements(stats))
      END
      ELSE: BEGIN
         print,'invalid station configuration sconfig'

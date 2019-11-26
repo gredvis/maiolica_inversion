@@ -167,14 +167,10 @@ PRO inv_modvector_mon_weekly_brd,sim,plot=plot
 
        IF keyword_set(sim.flask) THEN BEGIN  
           monfile = sim.moddir+'m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'        
-          IF keyword_set(sim.nobg) THEN $
-             monfile  = sim.moddir+'m_allweekly_flask_nobg_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'          
        ENDIF ELSE BEGIN
           monfile = sim.moddir+'m_allweekly_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'       
-          IF keyword_set(sim.nobg) THEN $
-             monfile = sim.moddir+'m_allweekly_nobg_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'
-          IF keyword_set(sim.special) THEN $
-             monfile = sim.moddir+'m_allweekly_special_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
+          IF keyword_set(sim.filter) THEN $
+             monfile = sim.moddir+'m_allweekly_filter_'+sim.sn+'_'+sim.name+'_'+syear[ij]+mon[im]+'.dat'           
        ENDELSE
        openw,lun,monfile,/get_lun
        WHILE STRMID(ch4mod[ipos].dtg,4,2) EQ mon[im] DO BEGIN

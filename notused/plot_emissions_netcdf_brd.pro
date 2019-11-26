@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   plot_inv_emissions_anomalies_paper
+;   plot_emissions_netcdf_brd
 ;
 ; PURPOSE:
 ;
@@ -13,15 +13,12 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  plot_inv_emissions,sim=sim
+;  plot_emissions_netcdf_brd,sim,rel=rel,stat_selection=stat_selection
 ;                            
 ; INPUTS:
 ;
-;       ya      (integer): start year of inversions
-;       ye      (integer): end year of inversion
-;       sa        (float): apriori emissions
-;       sp        (float): aposteriori emissions
-;       stations (string): stations to be evaluated
+;       sim (structure)  : the simulation information structure
+;       stat_section     : list of stations to include
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -77,7 +74,7 @@ END
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO make_emissions_netcdf,sim,rel=rel,stat_selection=stat_selection
+PRO plot_emissions_netcdf_brd,sim,rel=rel,stat_selection=stat_selection
 
   print, 'plot_inv_emissions_anomalies'
 
@@ -123,19 +120,16 @@ PRO make_emissions_netcdf,sim,rel=rel,stat_selection=stat_selection
   dir      = '/home/arf/pers/IDL/urmel/INVERSION/FINAL/'
   ;;dir      = '/home/arf/pers/IDL/urmel/INVERSION/'
   file     = dir+'inv_output_weekly_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt'  
-  IF keyword_set(special) THEN $
-     file     = dir+'inv_output_weekly_special_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt'  
-  IF keyword_set(special) THEN $ 
-     ctrlfile = dir+'inv_output_weekly_special_'+sim.sn+'_'+sctrl+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt' $
+  IF keyword_set(sim.filter) THEN $
+     file     = dir+'inv_output_weekly_filter_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.txt'
+
+  IF keyword_set(sim.filter) THEN $ 
+     ctrlfile = dir+'inv_output_weekly_filter_'+sim.sn+'_'+sctrl+'_'+syra+'-'+syre+'_'+sim.qunc+'.txt' $
   ELSE $
-     ctrlfile = dir+'inv_output_weekly_'+sim.sn+'_'+sctrl+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt'  
+     ctrlfile = dir+'inv_output_weekly_'+sim.sn+'_'+sctrl+'_'+syra+'-'+syre+'_'+sim.qunc+'.txt'  
   
-  IF keyword_set(flask) THEN $
-     flaskfile = dir+'inv_output_weekly_flask_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'_nov12.txt'
-  
-  
-;ctrlfile =dir+'inv_output_weekly_'+sim.sn+'_'+sctrl+'_'+syra+'-'+syre+'_opt35.0000_nov12.txt' 
-;stop
+  IF keyword_set(sim.flask) THEN $
+     flaskfile = dir+'inv_output_weekly_flask_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.txt'
   
                                 ;nall = 1
   nall = 2 
@@ -166,9 +160,6 @@ PRO make_emissions_netcdf,sim,rel=rel,stat_selection=stat_selection
      sp[*,*,i] = sphelp[*,*]
      free_lun,lun
   ENDFOR
-  
-;stop
-  
   
   m        = n-11               ; only plot from 2001 on   
   convfact = 1.e-9
@@ -209,7 +200,6 @@ PRO make_emissions_netcdf,sim,rel=rel,stat_selection=stat_selection
   
                                 ; Spezialfall Tropical BB
   
-; indbb = WHERE((spserie[*,3,1] gt 0.1) and (spserie[*,3,0] gt 0.1),cbb,complement=nochange)
 ;  IF cbb gt 0L THEN BEGIN
 ;    diffserie[indbb,3]    = spserie[indbb,3,1]-spserie[indbb,3,0]
 ;    diffserie[nochange,3] = 0.
@@ -246,7 +236,6 @@ PRO make_emissions_netcdf,sim,rel=rel,stat_selection=stat_selection
      
      
   ENDFOR
-;stop
   
   saa=sahelp*1e-9*365
   
@@ -302,12 +291,10 @@ PRO make_emissions_netcdf,sim,rel=rel,stat_selection=stat_selection
   IF keyword_set(rel) THEN np = 'rel' ELSE np = 'abs'
   
   plotfile = plotdir+'ts_inv_emissions_anomalies_weekly_'+np+'_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.eps'
-  IF keyword_set(nobg) THEN $
-     plotfile = plotdir+'ts_inv_emissions_anomalies_weekly_nobg_'+np+'_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.eps'
-  IF keyword_set(special) THEN $
-     plotfile = plotdir+'ts_inv_emissions_anomalies_weekly_special_'+np+'_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.eps'
+  IF keyword_set(sim.filter) THEN $
+     plotfile = plotdir+'ts_inv_emissions_anomalies_weekly_filter_'+np+'_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.eps'
   
-  IF keyword_set(flask) and keyword_set(sensctrl) THEN $
+  IF keyword_set(sim.flask) and keyword_set(sensctrl) THEN $
      plotfile = plotdir+'ts_inv_emissions_anomalies_weekly_sensctrlflask_'+np+'_'+sim.sn+'_'+sim.name+'_'+syra+'-'+syre+'_'+sim.qunc+'.eps' 
   
   IF keyword_set(sensctrl) and NOT keyword_set(flask) THEN $

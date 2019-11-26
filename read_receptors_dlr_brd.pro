@@ -61,6 +61,7 @@
 ;-
 PRO read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
 
+  ok=0
   IF n_elements(sim) EQ 0 THEN BEGIN
      message,'parameter sim missing in call',/continue
      RETURN
@@ -71,7 +72,7 @@ PRO read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
   ENDIF
 
   ;; directory of DLR model output
-  ;dlrdir = sim.modeldir+'DLR/empa/'
+  dlrdir = sim.modeldir+'DLR/empa/'
   
   ;; problem with netcdf library made it necessary to copy files to /bigdat
   ;; see https://groups.google.com/forum/#!topic/comp.lang.idl-pvwave/5dbp8dV1q3U
@@ -98,7 +99,7 @@ PRO read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
      info[k].yrcpt=sinfo.lat
 
      direc = dlrdir+'scout_'+dlrid+'/'
-     IF file_test(direc) EQ 0 THEN stop
+     IF file_test(direc) EQ 0 THEN GOTO,nextstat
 
      IF yyyymm ge 200800 then BEGIN
         filename = direc+'empa14_________'+yyyymm+'_scout_'+dlrid+'_atstatheight.nc'
@@ -128,7 +129,7 @@ PRO read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
         time=(time-time[0]+1)*86400
         ;; Initialize data structure array
         nspec=241 ; number CH4 species (48*5) + air_tracer
-        rec  = {ppb:DblArr(nspec,n_elements(sim.stats))}
+        rec  = {ppb:DblArr(nspec,n_elements(sim.stats))+!values.d_nan}
         data = replicate(rec,ntime)
         data.ppb[0,*]=1D       ; air tracer set to 1. for DLR output
      ENDIF
@@ -146,6 +147,8 @@ PRO read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
         ENDFOR
      ENDFOR
      ncdf_close,ncid
+     
+     nextstat:
 
   ENDFOR ; end loop over station
 

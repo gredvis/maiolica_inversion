@@ -74,13 +74,16 @@ PRO read_processed_obs_data_month,sim,yyyymm,ch4obs=ch4obs
   
   suffix = ''
   IF sim.flask THEN suffix = 'flask_'
-  IF sim.special THEN suffix = 'special_'
-  IF sim.brw THEN suffix = ''
+  IF sim.filter THEN suffix = 'filter_'
 
   ;*******************************
   ;* read data
   ;******************************* 
   infile = sim.obsdir + 'z_allweekly_' + suffix + sim.sn + '_' + yyyymm + '.dat'
+  IF file_test(infile) EQ 0 THEN BEGIN
+     print,'file ',infile,' not found'
+     RETURN
+  ENDIF
   nobs   = FILE_LINES(infile)
 
   rec = {dtg:'',name:'',lon:0.,lat:0.,ch4:0.,numobs:0,type:''}

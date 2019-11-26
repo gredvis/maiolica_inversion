@@ -82,8 +82,12 @@ PRO read_processed_model_data_month,sim,yyyymm,ch4recs=ch4recs
   yyyy = STRMID(yyyymm,0,4)
   mm = STRMID(yyyymm,4,2)
 
-  file = sim.moddir+'m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+yyyy+mm+'.dat'     
-     
+  IF sim.flask THEN BEGIN
+     file = sim.moddir+'m_allweekly_flask_'+sim.sn+'_'+sim.name+'_'+yyyy+mm+'.dat'
+  ENDIF ELSE BEGIN
+     file = sim.moddir+'m_allweekly_'+sim.sn+'_'+sim.name+'_'+yyyy+mm+'.dat'     
+  ENDELSE
+
   openr,lun,file,/get_lun
   WHILE NOT eof(lun) DO BEGIN
      readf,lun,line

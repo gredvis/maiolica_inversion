@@ -74,7 +74,6 @@
 PRO read_receptor_output_brd,sim,yyyy,ntime=ntime,time=timecollect,$
                              mch4=mch4collect,mtrace=mtracollect
 
-  ppbfact = 1.e9
   nmonths = 12
   nst     = n_elements(sim.stats)
   ntot    = sim.ntrace*sim.nage

@@ -1,4 +1,66 @@
-;; library of support routines for the MAIOLICA-II inverse modelling
+;+
+; NAME:
+;   inv_tools_brd (library)
+;
+; PURPOSE
+;   library of support routines for the MAIOLICA-II inverse modelling
+; 
+; PROCEDURES:
+;  emiss_categories,main=main,dlr=dlr,labels=labels
+;   Get names of all 48 emission categories as well as the corresponding variable
+;   names (labels) used in the model (different for DLR than for Empa)
+;
+;  emiss_colors,groups=groups
+;   Color IDs used for plotting individual categories
+;
+;  plot_category_legend,position=position
+;   Plot a figure legend listing all 48 emission categories using
+;   the names from emiss_categories() and colors from emiss_colors()
+;
+;  station_rcpt_levs,stats,levs=levs
+;   Get for all receptor locations the optimal receptor altitude
+;   (important for mountain and tall tower sites)
+;
+;  get_week,yyyymmdd,leap=leap,wmin=wmin,wmax=wmax,wcenter=wcenter,iscenter=iscenter
+;    For a given day get the corresponding week to which it belongs
+;
+;  get_sim_dates,sim
+;    For a given simulation, compute the string vector yyyymm
+;    with all months from sim.syyyymm to sim.eyyyymm
+;  
+;  station_mapping_empa2dlr,empaid
+;    Map station IDs used by Empa onto those used by DLR
+;
+;  read_receptor_list,sim
+;    Get list of receptor points at which FLEXPART output was written for
+;    the MAIOLICA-2 simulations. For elevated stations, output was generated 
+;    for several heights above ground.
+;
+;  get_yyyymm
+;    For a given simulation, get the vector of months yyyymm
+;
+;  check_stationlist,sim,yyyymm
+;    Check if station info in station_info.pro is compatible with receptor point 
+;    locations used for FLEXPART runs
+;
+;  sim_filename_str,sim,prelim=prelim
+;    Get string used in file names for a given simulation
+;
+;  read_inv_results_netcdf,sim,prelim=prelim,yyyymm=yyyymm,$
+;                                 emisonly=emisonly,statonly=statonly
+;    Read output of the inversion either for a single month yyyymm or
+;    for the complete simulation. Output include prior and posterior emissions
+;    (posterior from all 4 optimization steps), their covariances, the
+;    correction factors for the oldest age class, and the chi square statistics
+;    and log-likelihoods. Set /emisonly to return only prior and posterior
+;    emission fields, and set /statonly to return only zlen, dllh, and nobs
+;
+;  HISTORY:
+;   Dominik Brunner (DB)
+;   Empa, Swiss Federal Institute of Materials Science and Technology
+;
+;  DB, 05 Jan 2018: first comprehensively documented version
+;-
 
 FUNCTION emiss_categories,main=main,dlr=dlr,labels=labels
 
@@ -57,55 +119,107 @@ END
 
 ;---------------------------------------------------------------------------------
 
-FUNCTION emiss_colors
+;+
+; NAME:
+;   emiss_colors
+; PURPOSE:
+;   return color values for individual tracers (emission categories)
+;   used for plotting
+;   Set keyword /groups to shrink number of colors considerably
+;-
+FUNCTION emiss_colors,groups=groups
+  
+  col = [cgcolor("OLIVE"),cgcolor("DARKGREEN"),cgcolor("PALEGREEN"),$
+         cgcolor("AQUAMARINE"),cgcolor("GREENYELLOW"),cgcolor("TEAL"),$
+         cgcolor("LIGHTSEAGREEN"),cgcolor("GREEN"),cgcolor("KHAKI"),$
+         cgcolor("SPRINGGREEN"),cgcolor("LIMEGREEN"),cgcolor("RED"),$
+         cgcolor("ORANGERED"),cgcolor("CRIMSON"),cgcolor("FIREBRICK"),$
+         cgcolor("SALMON"),cgcolor("DARKRED"),cgcolor("TOMATO"),$
+         cgcolor("PINK"),cgcolor("ROSE"),cgcolor("VIOLETRED"),cgcolor("MAGENTA"),$
+         cgcolor("SIENNA"),cgcolor("ORANGE"),cgcolor("BEIGE"),cgcolor("SEASHELL"),$
+         cgcolor("LIGHTYELLOW"),cgcolor("PAPAYA"),cgcolor("WHEAT"),$
+         cgcolor("BURLYWOOD"),cgcolor("LIGHTGRAY"),cgcolor("BLUE"),$
+         cgcolor("ROYALBLUE"),cgcolor("NAVY"),cgcolor("STEELBLUE"),$
+         cgcolor("CADETBLUE"),cgcolor("CORNFLOWERBLUE"),cgcolor("SKYBLUE"),$
+         cgcolor("DARKSLATEBLUE"),cgcolor("PURPLE"),cgcolor("POWDERBLUE"),$
+         cgcolor("DODGERBLUE"),cgcolor("YGB3"),cgcolor("TURQUOISE"),$
+         cgcolor("BLACK"),cgcolor("YELLOW"),cgcolor("GOLD"),cgcolor("GOLDENROD")]
+  
+  IF keyword_set(groups) THEN BEGIN
+     anth = 11 & bb = 254 & rice=21 & wetl=76 & other=120
+     col = [anth,anth,anth,anth,anth,anth,anth,anth,anth,anth,anth,$
+            bb,bb,bb,bb,bb,bb,bb,bb,bb,bb,bb,bb,bb,$
+            rice,rice,rice,rice,rice,rice,rice,$
+            wetl,wetl,wetl,wetl,wetl,wetl,wetl,wetl,wetl,wetl,wetl,wetl,wetl,$
+            other,other,other,other]
+  ENDIF
 
-col = [cgcolor("OLIVE"),cgcolor("DARKGREEN"),cgcolor("PALEGREEN"),$
-       cgcolor("AQUAMARINE"),cgcolor("GREENYELLOW"),cgcolor("TEAL"),$
-       cgcolor("LIGHTSEAGREEN"),cgcolor("GREEN"),cgcolor("KHAKI"),$
-       cgcolor("SPRINGGREEN"),cgcolor("LIMEGREEN"),cgcolor("RED"),$
-       cgcolor("ORANGERED"),cgcolor("CRIMSON"),cgcolor("FIREBRICK"),$
-       cgcolor("SALMON"),cgcolor("DARKRED"),cgcolor("TOMATO"),$
-       cgcolor("PINK"),cgcolor("ROSE"),cgcolor("VIOLETRED"),cgcolor("MAGENTA"),$
-       cgcolor("SIENNA"),cgcolor("ORANGE"),cgcolor("BEIGE"),cgcolor("SEASHELL"),$
-       cgcolor("LIGHTYELLOW"),cgcolor("PAPAYA"),cgcolor("WHEAT"),$
-       cgcolor("BURLYWOOD"),cgcolor("LIGHTGRAY"),cgcolor("BLUE"),$
-       cgcolor("ROYALBLUE"),cgcolor("NAVY"),cgcolor("STEELBLUE"),$
-       cgcolor("CADETBLUE"),cgcolor("CORNFLOWERBLUE"),cgcolor("SKYBLUE"),$
-       cgcolor("DARKSLATEBLUE"),cgcolor("PURPLE"),cgcolor("POWDERBLUE"),$
-       cgcolor("DODGERBLUE"),cgcolor("YGB3"),cgcolor("TURQUOISE"),$
-       cgcolor("BLACK"),cgcolor("YELLOW"),cgcolor("GOLD"),cgcolor("GOLDENROD")]
-
-RETURN,col
+  RETURN,col
 
 END
 
 ;-------------------------------------------------------------------------------
 
-PRO station_rcpt_levs,stats,levs=levs
+PRO station_rcpt_levs,stats,levs=levs,check=check
   ;; optimal FLEXPART receptor levels
   rec = {name:'',lev:0}
-  allstat = replicate(rec,91)
-  file='/home/brd134/IDL/arfeuille_final/choice_modellevel_station_91.dat'
+  allstat = replicate(rec,93)
+  file='/home/brd134/IDL/arfeuille_final/choice_modellevel_station_93.dat'
   openr,lun,file,/get_lun
   readf,lun,allstat,format='(a3,2x,i4)'
   free_lun,lun
 
   nstat = n_elements(stats)
   levs = StrArr(nstat)+'-9999'
-  FOR i=0,nstat-1 DO BEGIN
-     index = WHERE(allstat.name EQ stats[i],cnt)
-     IF cnt EQ 1 THEN levs[i]=strcompress(allstat[index[0]].lev,/rem)
-  ENDFOR
+
+  IF keyword_set(check) THEN BEGIN
+     ;; check how well station level agrees with station altitude
+     erafile = '/project/arf/nas/input/ERAInterim_surface_fields.nc'
+     ncid = ncdf_open(erafile)
+     varid = ncdf_varid(ncid,'lon')
+     ncdf_varget,ncid,varid,lon
+     varid = ncdf_varid(ncid,'lat')
+     ncdf_varget,ncid,varid,lat
+     varid = ncdf_varid(ncid,'var129')
+     ncdf_varget,ncid,varid,z
+     ncdf_close,ncid
+     z = z / 9.81
+     lat = reverse(lat)
+     z = reverse(z,2)
+     minlon=min(lon) & dlon = 1.
+     minlat=min(lat) & dlat = 1.
+     
+     FOR i=0,nstat-1 DO BEGIN
+        index = WHERE(allstat.name EQ stats[i],cnt)
+        IF cnt EQ 1 THEN BEGIN
+           levs[i]=strcompress(allstat[index[0]].lev,/rem)
+           sinfo = station_info(stats[i])
+           ;; interpolate z to station coordinate
+           ilon = (sinfo.lon-minlon)/dlon
+           ilat = (sinfo.lat-minlat)/dlon
+           zint = interpolate(z,ilon,ilat)
+           IF sinfo.type EQ 'mountain' OR sinfo.type EQ 'tower' THEN BEGIN
+              print,''
+              print,'Station ',sinfo.name,' (',stats[i],')',', type ',sinfo.type
+              print,'True alt  :',sinfo.alt,'; Model alt :',zint+levs[i],' with ',levs[i],' m.a.g.'
+           ENDIF
+        ENDIF
+     ENDFOR
+  ENDIF
   
 END
 
 ;-------------------------------------------------------------------------------------------------------
 
-PRO plot_category_legend,position=position
+PRO plot_category_legend,position=position,sort=sort
 
   IF n_elements(position) NE 4 THEN position=[0,0.1,0.3,0.9]
-  cat = emiss_categories()
-  col = emiss_colors()
+  IF keyword_set(sort) THEN BEGIN
+     sort_emiss_categories,ocats=cat,oind=oind,ocol=col
+  ENDIF ELSE BEGIN
+     cat = emiss_categories()
+     col = emiss_colors()
+  ENDELSE
 
   dy = (position[2]-position[0])/14
   dybox = 0.01
@@ -126,9 +240,9 @@ PRO plot_category_legend,position=position
      xyouts,right+0.01,bottom+dylab,cat[index[i]],charsize=1.1,charthick=1.2,color=255,/normal
   ENDFOR
   
-  ;; Biomass burning emissions
-  xoffs = 0.2 & yoffs = 0.0
-  index = WHERE(strpos(cat,'BB') NE -1,ncnt)
+  ;; Wetland emissions
+  xoffs = 0.4 & yoffs = 0.0
+  index = WHERE(strpos(cat,'WET') NE -1,ncnt)
   FOR i=0,ncnt-1 DO BEGIN
      top    = position[2] - yoffs -dy*i + dybox/2.
      bottom = position[2] - yoffs -dy*i - dybox/2.
@@ -140,9 +254,9 @@ PRO plot_category_legend,position=position
      xyouts,right+0.01,bottom+dylab,cat[index[i]],charsize=1.1,charthick=1.2,color=255,/normal
   ENDFOR
 
-  ;; Wetland emissions
-  xoffs = 0.4 & yoffs = 0.0
-  index = WHERE(strpos(cat,'WET') NE -1,ncnt)
+  ;; Biomass burning emissions
+  xoffs = 0.2 & yoffs = 0.0
+  index = WHERE(strpos(cat,'BB') NE -1,ncnt)
   FOR i=0,ncnt-1 DO BEGIN
      top    = position[2] - yoffs -dy*i + dybox/2.
      bottom = position[2] - yoffs -dy*i - dybox/2.
@@ -287,66 +401,105 @@ FUNCTION station_mapping_empa2dlr,empaid
 
   ;; map an Empa station ID to a DLR station ID  
   CASE strupcase(empaID) OF
+     'ABP': dlrid='ARE'
      'ALT': dlrid='ALE' 
-     'MHD': dlrid='MAC'         ; Mace Head
-     'MLO': dlrid='MAU'         ; Mauna Loa
-     'RPB': dlrid='RAG'
-     'SMO': dlrid='?missing?'
-     'THD': dlrid='TRI'
-     'WSA': dlrid='SAB'         ; Sable Island
-     'CGO': dlrid='CPG'         ; Cape Grim
-     'IZO': dlrid='IZA'
-     'PAL': dlrid='PSA'
-     'ICE': dlrid='?missing?'
-     'SIS': dlrid='?missing?'
+     'AMS': dlrid='AMS'
+     'AMT': dlrid='ARG'
+     'AMY': dlrid='ANM' 
+     'ARH': dlrid='ARR'
+     'ASC': dlrid='ASC'
+     'ASK': dlrid='ASS'
+     'AZR': dlrid='TCI'
+     'BAL': dlrid='BAL'
+     'BGU': dlrid='BEG'
+     'BHD': dlrid='BAR'
+     'BIK': dlrid='BIA'
+     'BKT': dlrid='BUK'
+     'BEM': dlrid='BRE'
+     'BME': dlrid='STD'
+     'BMW': dlrid='TUD'
+     'BRW': dlrid='BRW'
+     'BSC': dlrid='BLA'
      'CBA': dlrid='COL'
-     'SHM': dlrid='SHI'         ; Shemya Islan; Florian used SHE (Shetland?)
-     'OXK': dlrid='OCH'
-     'LPO': dlrid='ILE'
+     'CDL': dlrid='CAN'
+     'CFA': dlrid='CPF'
+     'CGO': dlrid='CPG'         ; Cape Grim
+     'CHM': dlrid='CHI'
+     'CHR': dlrid='CHR'
+     'COI': dlrid='CPO'
+     'CPT': dlrid='CPP'
+     'CRI': dlrid='CPR'
+     'CRZ': dlrid='CRO'
+     'CVO': dlrid='CPV'
+     'CYA': dlrid='CAS'
+     'DEU': dlrid='DEU'
+     'EGB': dlrid='EGB'
+     'EIC': dlrid='EAS'
      'ESP': dlrid='EST'
+     'ETL': dlrid='ETL'
+     'FSD': dlrid='FRA'
+     'GMI': dlrid='GUA'
+     'GOZ': dlrid='missing'     ; Dwejra
+     'HAT': dlrid='HAT'
+     'HBA': dlrid='HAL'
      'HPB': dlrid='HOH'
      'HUN': dlrid='HEG'
-     'LEF': dlrid='PAR'
-     'AMT': dlrid='?missing?'
-     'BSC': dlrid='BLA'
-     'KZD': dlrid='SAR'
-     'UUM': dlrid='ULA'
-     'PDM': dlrid='PIC'
-     'BGU': dlrid='BEG'
-     'NWR': dlrid='NIW'
-     'UTA': dlrid='WEN'
-     'AZR': dlrid='TCI'
-     'PTA': dlrid='POI'
-     'TAP': dlrid='TAE'
-     'WLG': dlrid='MTW'
-     'BMW': dlrid='TUD'
-     'BME': dlrid='STD'
-     'WKT': dlrid='MOO'
-     'WIS': dlrid='SED'
-     'ASK': dlrid='ASS'
-     'LLN': dlrid='LUL'
+     'ICE': dlrid='HEI'         ; Storhofdi, Iceland, Heimaey
+     'IZO': dlrid='IZA'
+     'JFJ': dlrid='JUN'
+     'KEY': dlrid='KEY'
+     'KMW': dlrid='KOL'
      'KUM': dlrid='CPK'
-     'CRI': dlrid='CPR'
-     'GMI': dlrid='GUA'
-     'ABP': dlrid='ARE'
-     'MKN': dlrid='MTK'
-     'SEY': dlrid='MAH'
-     'CFA': dlrid='CPF'
-     'NMB': dlrid='GLO'
-     'EIC': dlrid='EAS'
-     'AMS': dlrid='AMS'
-     'MAA': dlrid='MAW'
-     'ARH': dlrid='ARR'
-     'BHD': dlrid='BAR'
-     'CRZ': dlrid='CRO'
-     'MQA': dlrid='MQI'         ; Macquarie Island; Florian used MAC
-     'TDF': dlrid='TIE'
-     'PSA': dlrid='PST'
-     'CYA': dlrid='CAS'
-     'HBA': dlrid='HAL'
+     'KZD': dlrid='SAR'
+     'LEF': dlrid='PAR'
+     'LLB': dlrid='LAC'
+     'LLN': dlrid='LUL'
      'LMP': dlrid='LAM'
-     'BEGUR': dlrid='BEG'
+     'LPO': dlrid='ILE'
+     'MAA': dlrid='MAW'
+     'MHD': dlrid='MAC'         ; Mace Head
+     'MKN': dlrid='MTK'
+     'MLO': dlrid='MAU'         ; Mauna Loa
+     'MNM': dlrid='MIN'
+     'MQA': dlrid='MQI'         ; Macquarie Island; Florian used MAC
+     'NGL': dlrid='NEU'
+     'NMB': dlrid='GLO'
+     'NWR': dlrid='NIW'
+     'OXK': dlrid='OCH'
+     'PAL': dlrid='PSA'
+     'PDM': dlrid='PIC'
+     'PRS': dlrid='PLR'
+     'PSA': dlrid='PST'
+     'PTA': dlrid='POI'
+     'PUY': dlrid='PUY'
+     'RPB': dlrid='RAG'
+     'RYO': dlrid='RYO'
+     'SEY': dlrid='MAH'
+     'SGP': dlrid='SGP'
+     'SHM': dlrid='SHI'         ; Shemya Island; Florian used SHE (Shetland?)
+     'SIS': dlrid='SHE'         ; Lerwick, Shetland Island
+     'SMO': dlrid='TUT'         ; Cape Matatula on Tutuila Island, Samoa
+     'SSL': dlrid='SCH'
+     'SUM': dlrid='SUM'
+     'SYO': dlrid='SYO'
+     'TAP': dlrid='TAE'
+     'TDF': dlrid='TIE'
+     'TER': dlrid='TER'
+     'THD': dlrid='TRI'
+     'TKB': dlrid='TSU'
+     'USH': dlrid='TIE'
+     'UTA': dlrid='WEN'
+     'UUM': dlrid='ULA'
+     'WIS': dlrid='SED'
+     'WKT': dlrid='MOO'
+     'WLG': dlrid='MTW'
+     'WSA': dlrid='SAB'         ; Sable Island
+     'YON': dlrid='YON'
+     'ZEP': dlrid='ZEP'
+     'ZGT': dlrid='ZIN'
+     'ZSF': dlrid='ZUG'
      'ILEGRANDE': dlrid='ILE'
+     'BEGUR': dlrid='BEG'
      ELSE: dlrid = strupcase(empaid)
   ENDCASE
   
@@ -429,5 +582,406 @@ FUNCTION get_yyyymm,sim
   ENDFOR
 
   RETURN,yyyymm
+
+END
+
+;-------------------------------------------------------------------------
+PRO check_stationlist,sim,yyyymm
+;+
+; Check if station info in station_info.pro is compatible with receptor point locations
+; used for FLEXPART runs
+;-
+  IF n_elements(yyyymm) EQ 0 THEN yyyymm='200501'
+  read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+
+  FOR i=0,n_elements(info)-1 DO BEGIN
+     sstr = STRSPLIT(info[i].rcptname,' ',/extract)
+     IF n_elements(sstr) GT 1 THEN alt = sstr[1]
+     id = sstr[0]
+     sinfo = station_info(id)
+     IF abs(sinfo.lon-info[i].xrcpt) GT 0.01 OR abs(sinfo.lat-info[i].yrcpt) GT 0.01 THEN BEGIN
+        print,'------------------'
+        print,i,' ',sinfo.id,' ',sinfo.name
+        print,'sinfo lon = ',sinfo.lon,', rcpt lon = ',info[i].xrcpt
+        print,'sinfo lat = ',sinfo.lat,', rcpt lat = ',info[i].yrcpt
+        print,'sinfo alt = ',sinfo.alt,', rcpt alt = ',info[i].zrcpt
+        print,''
+        stop
+     ENDIF ELSE BEGIN
+        print,i,' ',sinfo.id,' ',sinfo.name,' is ok'
+     ENDELSE
+  ENDFOR
+
+END
+
+;------------------------------------------------------------------------------
+;+
+; Get a substring used for filenames for a given simulation
+FUNCTION sim_filename_str,sim,prelim=prelim
+  sstr = ''
+  IF keyword_set(prelim) THEN sstr = 'prelim_'
+  IF keyword_set(sim.flask) THEN sstr = sstr + 'flask_'
+  IF keyword_set(sim.filter) THEN sstr = sstr + 'filter_'
+  sstr = sstr +sim.sn + '_' + sim.name + '_' + sim.qunc + '_'
+  RETURN,sstr
+END
+
+
+;----------------------------------------------------
+
+FUNCTION read_inv_results_netcdf,sim,prelim=prelim,yyyymm=yyyymm,$
+                                 emisonly=emisonly,statonly=statonly
+
+  IF n_elements(sim) EQ 0 THEN RETURN,-1
+ 
+  sstr =sim_filename_str(sim,prelim=prelim)
+  ncfile = sim.outdir + 'inv_result_'+sstr+sim.syyyymm+'-'+sim.eyyyymm+'.nc'
+  
+  IF file_test(ncfile) EQ 0 THEN BEGIN
+     print,'inversion output file ',ncfile,' not found'
+     RETURN,-1
+  ENDIF
+
+  print,'reading results from file ',ncfile
+  ncid = NCDF_OPEN(ncfile)
+  
+  ;; get dimensions
+  ncdf_diminq, ncid, 0, timedim, ntime
+  ncdf_diminq, ncid, 1, tracdim, ntrace
+
+  ;; read times
+  varid = ncdf_varid(ncid,'year')
+  ncdf_varget,ncid,varid,yyyy
+  varid = ncdf_varid(ncid,'month')
+  ncdf_varget,ncid,varid,mm
+
+  allyyyymm = string(yyyy)+string(mm)
+  
+  toffset = 0 & tcount = ntime
+  tracoffset = 0 & traccount = ntrace
+
+  IF n_elements(yyyymm) NE 0 THEN BEGIN
+     ;; read in only data for this month
+     index = WHERE(allyyyymm EQ yyyymm,cnt)
+     IF cnt EQ 0 THEN BEGIN
+        print,'no data found for month ',yyyymm
+        ncdf_close,ncid
+        RETURN,-1
+     ENDIF ELSE BEGIN
+        toffset = index[0] & tcount = 1
+        allyyyymm = yyyymm
+     ENDELSE
+  ENDIF
+
+  IF keyword_set(statonly) THEN GOTO,statonly
+
+  offset = [toffset,0L] & count = [tcount,traccount]
+
+  varid = ncdf_varid(ncid,'emis_apri')
+  ncdf_varget,ncid,varid,emis_apri,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_apost')
+  ncdf_varget,ncid,varid,emis_apost,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_apost1')
+  ncdf_varget,ncid,varid,emis_apost1,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_apost2')
+  ncdf_varget,ncid,varid,emis_apost2,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_apost3')
+  ncdf_varget,ncid,varid,emis_apost3,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'scalef')
+  ncdf_varget,ncid,varid,scalef,offset=offset,count=count
+
+  IF keyword_set(emisonly) THEN BEGIN
+     result = {yyyymm:allyyyymm,emis_apri:emis_apri,emis_apost:emis_apost,$
+              emis_apost1:emis_apost1,emis_apost2:emis_apost2,$
+               emis_apost3:emis_apost3,scalef:scalef}
+     ncdf_close,ncid
+     RETURN,result
+  ENDIF
+
+  statonly:
+  varid = ncdf_varid(ncid,'zlen')
+  ncdf_varget,ncid,varid,zlen,offset=toffset,count=tcount
+
+  varid = ncdf_varid(ncid,'dllh')
+  ncdf_varget,ncid,varid,dllh,offset=toffset,count=tcount
+
+  varid = ncdf_varid(ncid,'nobs')
+  ncdf_varget,ncid,varid,nobs,offset=toffset,count=tcount
+
+  IF keyword_set(statonly) THEN BEGIN
+     result = {yyyymm:allyyyymm,zlen:zlen,dllh:dllh,nobs:nobs}
+     ncdf_close,ncid
+     RETURN,result
+  ENDIF
+
+  offset = [toffset,0L,0L] & count = [tcount,traccount,traccount]
+
+  varid = ncdf_varid(ncid,'emis_cov')
+  ncdf_varget,ncid,varid,emis_cov,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_cov1')
+  ncdf_varget,ncid,varid,emis_cov1,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_cov2')
+  ncdf_varget,ncid,varid,emis_cov2,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'emis_cov3')
+  ncdf_varget,ncid,varid,emis_cov3,offset=offset,count=count
+
+  ncdf_close,ncid
+
+  result = {yyyymm:allyyyymm,emis_apri:emis_apri,emis_apost:emis_apost,$
+            emis_apost1:emis_apost1,emis_apost2:emis_apost2,$
+            emis_apost3:emis_apost3,cov_apost:emis_cov,$
+            cov_apost1:emis_cov1,cov_apost2:emis_cov2,cov_apost3:emis_cov3,$
+            scalef:scalef,zlen:zlen,dllh:dllh,nobs:nobs}   
+
+  RETURN,result
+
+END
+
+;------------------------------------------------------------------------
+
+PRO read_inv_station_output_netcdf,sim,prelim=prelim,yyyymm=yyyymm,prior=prior,ok=ok,$
+                                   ndata=ndata,ch4obs=ch4obs,ch4apri=ch4apri,ch4post=ch4post,$
+                                   catapri=catapri,catpost=catpost,cats=cats,stats=stats
+
+  ok = 0
+  IF n_elements(sim) EQ 0 THEN BEGIN
+     message,'parameter sim missing',/continue
+     RETURN
+  ENDIF
+  
+  sstr =sim_filename_str(sim,prelim=prelim)
+  ncfile = sim.outdir + 'inv_station_output_'+sstr+sim.syyyymm+'-'+sim.eyyyymm+'.nc'
+  
+  IF file_test(ncfile) EQ 0 THEN BEGIN
+     message,'inversion output file '+ncfile+' not found',/continue
+     RETURN
+  ENDIF
+
+  print,'reading monthly mean station output from file ',ncfile
+  ncid = NCDF_OPEN(ncfile)
+  
+  ;; get dimensions
+  ncdf_diminq, ncid, 0, timedim, ntime
+  ncdf_diminq, ncid, 1, tracdim, ntrace
+  ncdf_diminq, ncid, 2, statdim, nstat
+
+  ;; read times
+  varid = ncdf_varid(ncid,'year')
+  ncdf_varget,ncid,varid,yyyy
+  varid = ncdf_varid(ncid,'month')
+  ncdf_varget,ncid,varid,mm
+
+  yyyymm = string(yyyy)+string(mm)
+  
+  toffset = 0L & tcount = ntime
+  tracoffset = 0L & traccount = ntrace
+  statoffset = 0L & statcount = nstat
+
+  ;; IF n_elements(yyyymm) NE 0 THEN BEGIN
+  ;;    ;; read in only data for this month
+  ;;    index = WHERE(allyyyymm EQ yyyymm,cnt)
+  ;;    IF cnt EQ 0 THEN BEGIN
+  ;;       message,'no data found for month '+yyyymm,/continue
+  ;;       ncdf_close,ncid
+  ;;       RETURN
+  ;;    ENDIF ELSE BEGIN
+  ;;       toffset = index[0] & tcount = 1
+  ;;       allyyyymm = yyyymm
+  ;;    ENDELSE
+  ;; ENDIF
+
+  offset = [toffset,statoffset] & count = [tcount,statcount]
+  offsetcat = [toffset,tracoffset,statoffset]
+  countcat = [tcount,traccount,statcount]
+
+  varid = ncdf_varid(ncid,'source_cat')
+  ncdf_varget,ncid,varid,cats
+  cats = string(cats)
+
+  varid = ncdf_varid(ncid,'station')
+  ncdf_varget,ncid,varid,stats
+  stats = string(stats)
+
+  varid = ncdf_varid(ncid,'num_data')
+  ncdf_varget,ncid,varid,ndata,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'CH4_obs')
+  ncdf_varget,ncid,varid,ch4obs,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'CH4_apri')
+  ncdf_varget,ncid,varid,ch4apri,offset=offset,count=count
+
+  varid = ncdf_varid(ncid,'CH4_apri_tracer')
+  ncdf_varget,ncid,varid,catapri,offset=offsetcat,count=countcat
+
+  IF NOT keyword_set(prior) THEN BEGIN
+     varid = ncdf_varid(ncid,'CH4_apost')
+     ncdf_varget,ncid,varid,ch4post,offset=offset,count=count
+     
+     varid = ncdf_varid(ncid,'CH4_apost_tracer')
+     ncdf_varget,ncid,varid,catpost,offset=offsetcat,count=countcat
+  ENDIF
+
+  ncdf_close,ncid
+
+  ok = 1
+END
+
+
+;------------------------------------------------------------------------------
+;                     sort emission categories
+;------------------------------------------------------------------------------
+PRO sort_emiss_categories,ocats=ocats,oind=oind,ocol=ocol
+ 
+  cats = emiss_categories()
+  ncat = n_elements(cats)
+
+  ;; first anthropogenic emissions (11 tracers)
+  ocats = StrArr(ncat) & oind = LonArr(ncat)
+  i=0
+  ocats[i] = 'ANTH_RUS' & i++
+  ocats[i] = 'ANTH_EU' & i++
+  ocats[i] = 'ANTH_NA' & i++
+  ocats[i] = 'ANTH_CHIN' & i++
+  ocats[i] = 'ANTH_SE_ASIA' & i++
+  ocats[i] = 'ANTH_IND' & i++
+  ocats[i] = 'ANTH_MIDEAST' & i++
+  ocats[i] = 'ANTH_SA' & i++
+  ocats[i] = 'ANTH_AFR' & i++
+  ocats[i] = 'ANTH_AUS' & i++
+  ocats[i] = 'ANTH_OCE' & i++
+
+  ;; second wetland emissions (13 tracers)
+  ocats[i] = 'WETL_RUS' & i++
+  ocats[i] = 'WETL_EU' & i++
+  ocats[i] = 'WETL_NAbor' & i++
+  ocats[i] = 'WETL_NAtemp' & i++
+  ocats[i] = 'WETL_CHIN' & i++
+  ocats[i] = 'WETL_SE_ASIA' & i++
+  ocats[i] = 'WETL_IND' & i++
+  ocats[i] = 'WETL_MID' & i++
+  ocats[i] = 'WETL_SAtrop' & i++
+  ocats[i] = 'WETL_SAtemp' & i++
+  ocats[i] = 'WETL_NAFR' & i++
+  ocats[i] = 'WETL_SAFR' & i++
+  ocats[i] = 'WETL_AUS' & i++
+  
+  ;; third biomass burning (13 tracers)
+  ocats[i] = 'BB_RUS' & i++
+  ocats[i] = 'BB_EU' & i++
+  ocats[i] = 'BB_NAbor' & i++
+  ocats[i] = 'BB_NAtemp' & i++
+  ocats[i] = 'BB_CHIN' & i++
+  ocats[i] = 'BB_SE_ASIA' & i++
+  ocats[i] = 'BB_IND' & i++
+  ocats[i] = 'BB_MID' & i++
+  ocats[i] = 'BB_SAtrop' & i++
+  ocats[i] = 'BB_SAtemp' & i++
+  ocats[i] = 'BB_NAFR' & i++
+  ocats[i] = 'BB_SAFR' & i++
+  ocats[i] = 'BB_AUS' & i++
+
+  ;; fourth rice (7 tracers)
+  ocats[i] = 'RICE_EU' & i++
+  ocats[i] = 'RICE_NA' & i++
+  ocats[i] = 'RICE_CHIN' & i++
+  ocats[i] = 'RICE_IND' & i++
+  ocats[i] = 'RICE_ASIA_AUS' & i++
+  ocats[i] = 'RICE_SA' & i++
+  ocats[i] = 'RICE_AFR' & i++
+
+  ocats[i] = 'WILD_anim' & i++
+  ocats[i] = 'TERMITES' & i++
+  ocats[i] = 'OCEAN' & i++
+  ocats[i] = 'VOLC'
+
+  FOR i=0,47 DO BEGIN
+     index = WHERE(cats EQ ocats[i],cnt)
+     oind[i]=index[0]
+  ENDFOR
+
+  ocol = bindgen(ncat)+1
+  ocol[24:*]=ocol[24:*]+1B
+  ocol[37:*]=ocol[37:*]+1B
+  ocol[44:*]=ocol[44:*]+1B
+
+END
+
+;--------------------------------------------------------------------
+
+FUNCTION read_model_data_mismatch_netcdf,sim,prelim=prelim,yyyymm=yyyymm,$
+                                         stats=stats
+
+  IF n_elements(sim) EQ 0 THEN RETURN,-1
+ 
+  sstr =sim_filename_str(sim,prelim=prelim)
+  ncfile = sim.outdir + 'inv_model_data_mismatch_'+sstr+sim.syyyymm+'-'+sim.eyyyymm+'.nc'
+  
+  IF file_test(ncfile) EQ 0 THEN BEGIN
+     print,'model data mismatch file ',ncfile,' not found'
+     RETURN,-1
+  ENDIF
+
+  ;print,'reading model-data mismatches from file ',ncfile
+  ncid = NCDF_OPEN(ncfile)
+  
+  ;; get dimensions
+  ncdf_diminq, ncid, 0, timedim, ntime
+  ncdf_diminq, ncid, 1, tracdim, nst
+
+  ;; read times
+  varid = ncdf_varid(ncid,'year')
+  ncdf_varget,ncid,varid,yyyy
+  varid = ncdf_varid(ncid,'month')
+  ncdf_varget,ncid,varid,mm
+
+  allyyyymm = string(yyyy)+string(mm)
+  
+  toffset = 0 & tcount = ntime
+
+  IF n_elements(yyyymm) NE 0 THEN BEGIN
+     ;; read in only data for this month
+     index = WHERE(allyyyymm EQ yyyymm,cnt)
+     IF cnt EQ 0 THEN BEGIN
+        print,'no data found for month ',yyyymm
+        ncdf_close,ncid
+        RETURN,-1
+     ENDIF ELSE BEGIN
+        toffset = index[0] & tcount = 1
+        allyyyymm = yyyymm
+     ENDELSE
+  ENDIF
+
+  offset = [toffset,0L] & count = [tcount,nst]
+
+  varid = ncdf_varid(ncid,'sigma_CH4')
+  ncdf_varget,ncid,varid,sigma_CH4,offset=offset,count=count
+  
+  IF n_elements(stats) NE 0 THEN BEGIN
+     ;; subset data for stations listed in stats
+     varid = ncdf_varid(ncid,'station')
+     ncdf_varget,ncid,varid,stations
+     stations = STRING(stations)
+     nstout=n_elements(stats)
+     outind = LonArr(nstout)
+     FOR k=0,nstout-1 DO BEGIN
+        index = WHERE(stats[k] EQ stations,cnt)
+        IF cnt NE 1 THEN stop
+        outind[k]=index[0]
+     ENDFOR
+     sigma_ch4=sigma_ch4[*,outind]
+  ENDIF
+
+  ncdf_close,ncid
+
+  RETURN,(reform(sigma_ch4))^2
 
 END
