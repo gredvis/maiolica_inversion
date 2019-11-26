@@ -4,7 +4,7 @@ IDL code for Kalman Smoother inversion following Bruhwiler et al. (2005)
 
 *Bruhwiler, L. M. P., Michalak, A. M., Peters, W., Baker, D. F., and Tans, P.: An improved Kalman Smoother for atmospheric inversions, Atmos. Chem. Phys., 5, 2691–2702, https://doi.org/10.5194/acp-5-2691-2005, 2005.*
 
-## Data 
+## Data
 
 All input and output is located in a directory with the following subdirectories:
 
@@ -41,18 +41,48 @@ All input and output is located in a directory with the following subdirectories
 
 ## Running an inversion
 
-** run_inversion_final.pro : Main routine **
+**Main routine**
 
-The following variables define the inversion settings:
-* run (string): inversion configuration name. The latest configuations used by Florian were 'NEW_DLR' and '22.4'
-  The configuration defines the a priori uncertainties per emission category
-* sconfig (string): the station configuration. Current options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
+    run_inversion_final, sim=sim, dlr=dlr
+  
+    Keyword input parameter:
+       /dlr: set this keyword to perform inversion on DLR's EMAC output instead of FLEXPART
+    Output:
+       sim : simulation structure
+       
+The inversion settings are defined through the following variables defined (hardcoded) at the beginning:
 
-** inv_configurations_brd.pro : Inversion settings
-Defines directories and inversion settings depending on variables *run* and *sconfig* provided by main routine.
-The routine returns the following structure: 
+    run (string):     Inversion configuration name. The latest configuations used by Florian were 'NEW_DLR' and '22.4'
+                      The configuration defines the a priori uncertainties per emission category
+    sconfig (string): the station configuration. Current options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
 
-    sim = {name:name,$                     ; simulation name, e.g. 'final_sim01'
+The following processing steps can be activated (1) or deactivated (0)
+
+    step1 = 0   ; create monthly files of weekly mean observation and model data
+                ; needs to be called only once for FLEXPART or EMACs, since the output is
+                ; generated for all available sites irrespective of the simulation settings
+    step2 = 1   ; compute model-data mismatch first time
+    step3 = 1   ; run preliminary inversion to compute aposteriori model-data mismatch
+    step4 = 1   ; compute model-data mismatch second time using aposteriori model data
+    step5 = 1   ; run final inversion
+    step6 = 0   ; run plot programs
+
+
+**Inversion settings**
+
+Define directories and inversion settings depending on variables *run* and *sconfig* provided by main routine.
+
+    sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
+    
+    Inputs:
+       run:     inversion configuration name (see above)
+       sconfig: station configuration (e.g. 'flask' or 'all')
+       dlr:     set dlr=1 to conduct inversion for DLR model output 
+    Output:
+       ok :     =1 if configuration was successful, i.e. if values of run and sconfig are know
+       sim:     Simulation configuration structure
+       
+         sim = {name:name,$                ; simulation name, e.g. 'final_sim01'
          sconfig:sconfig,$                 ; station configuration, e.g. 'flask'
          sn,$                              ; string 'NNstats' with NN number of stations 
                                            ; used for file names
