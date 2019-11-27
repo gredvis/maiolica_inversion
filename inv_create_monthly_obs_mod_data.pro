@@ -784,7 +784,7 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
   ;; but value of sconfig needs to be 'all'
   run = '32.8'
   sconfig = 'all'
-  sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
+  sim = inv_configurations(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
   sim.filter=1B
   sim.statfilt = ['brw']
 
@@ -821,7 +821,7 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
 
         IF file_test(file) THEN BEGIN
            print,'reading flask data from station ',sinfo.id
-           read_wdcgg_brd,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
+           read_wdcgg,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
                           gvtimes=gvtimes,values=ch4,flag=flag,ndata=ndata,$
                           characteristics=characteristics,filter=sim.filter,$
                           statfilt=sim.statfilt
@@ -856,7 +856,7 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
 
         IF file_test(file) THEN BEGIN
            print,'reading AGAGE data from station ',sinfo.id
-           read_wdcgg_brd,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
+           read_wdcgg,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
                           gvtimes=gvtimes,values=ch4,flag=flag,ndata=ndata,$
                           characteristics=characteristics,filter=sim.filter,$
                           statfilt=sim.statfilt
@@ -901,7 +901,7 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
 
            IF file_test(file) THEN BEGIN
               IF first THEN print,'reading continuous data from station ',sinfo.id
-              read_wdcgg_brd,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
+              read_wdcgg,file=file,contri=contribution,lat=lat,lon=lon,cal=cal,$
                              gvtimes=gvtimes,values=ch4,flag=flag,ndata=ndata,$
                              characteristics=characteristics,filter=sim.filter,$
                              statfilt=sim.statfilt
@@ -965,9 +965,9 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
 
   ;; Read in model data for first month
   IF NOT sim.dlr THEN BEGIN
-     read_receptors_maiolica_brd,sim,cyyyymm,info=cinfo,data=cdata,dtg=cdtg
+     read_receptors_maiolica,sim,cyyyymm,info=cinfo,data=cdata,dtg=cdtg
   ENDIF ELSE BEGIN
-     read_receptors_dlr_brd,sim,cyyyymm,info=cinfo,data=cdata,dtg=cdtg
+     read_receptors_dlr,sim,cyyyymm,info=cinfo,data=cdata,dtg=cdtg
   ENDELSE
 
   WHILE cyyyymm NE eyyyymm DO BEGIN
@@ -982,9 +982,9 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
      ;; Read in model data for next month
      IF nyyyymm NE eyyyymm THEN BEGIN
         IF NOT sim.dlr THEN BEGIN
-           read_receptors_maiolica_brd,sim,nyyyymm,info=ninfo,data=ndata,dtg=ndtg
+           read_receptors_maiolica,sim,nyyyymm,info=ninfo,data=ndata,dtg=ndtg
         ENDIF ELSE BEGIN
-           read_receptors_dlr_brd,sim,nyyyymm,info=ninfo,data=ndata,dtg=ndtg
+           read_receptors_dlr,sim,nyyyymm,info=ninfo,data=ndata,dtg=ndtg
         ENDELSE
      ENDIF
      

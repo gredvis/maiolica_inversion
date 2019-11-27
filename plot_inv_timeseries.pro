@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   plot_inv_timeseries_brd
+;   plot_inv_timeseries
 ;
 ; PURPOSE:
 ;
@@ -18,7 +18,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
+;  plot_inv_timeseries,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
 ;                            post=post,bg=bg,eps=eps,dump=dump,map=map
 ;
 ; INPUTS:
@@ -102,7 +102,7 @@ END
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO plot_inv_timeseries_brd,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
+PRO plot_inv_timeseries,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
                             post=post,bg=bg,eps=eps,dump=dump,map=map
 
   IF n_elements(sim) EQ 0 THEN BEGIN

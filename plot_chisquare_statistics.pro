@@ -50,7 +50,7 @@
 ;
 ; EXAMPLE:
 ;
-;   sim = inv_configurations_brd(run='28.4',sconfig='flask_DLR2',ok=ok)
+;   sim = inv_configurations(run='28.4',sconfig='flask_DLR2',ok=ok)
 ;   plot_chisquare_statistics,sim=sim
 ;
 ; MODIFICATION HISTORY:

@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   inv_configurations_brd
+;   inv_configurations
 ;
 ; PURPOSE:
 ;
@@ -16,7 +16,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;    sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
+;    sim = inv_configurations(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
 ;
 ; INPUTS:
 ;
@@ -81,8 +81,8 @@
 ;
 ;   DB, 04 Jan 2017:  first implementation
 ;-
-@inv_tools_brd
-FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
+@inv_tools
+FUNCTION inv_configurations,run=run,sconfig=sconfig,dlr=dlr,ok=ok
 
   ;***********************************************
   ; define inversion parameters
@@ -94,9 +94,9 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   syyyymm = '198902' & eyyyymm = '201212'                ; start and end date of inversion
 
   IF keyword_set(DLR) THEN $
-     basedir = '/project/arf/nas/INVERSION_DLR/' $       ; base directory for intermediate and final files
+     basedir = '/project/brd134/maiolica/INVERSION_DLR/' $       ; base directory for intermediate and final files
   ELSE $
-     basedir = '/project/arf/nas/INVERSION/'             ; base directory for intermediate and final files
+     basedir = '/project/brd134/maiolica/INVERSION/'             ; base directory for intermediate and final files
 
   obsdir = basedir+'OBSINPUT/'                           ; directory of pre-processed observation data
   moddir = basedir+'MODINPUT/'                           ; directory of pre-processed model data
@@ -104,12 +104,11 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
                                                          ; (basically makes obsdir and moddir redunctant)
   errcovdir = basedir+'ERRORCOVARIANCE/'                 ; directory of station errors (diff model - station)
   outdir = basedir+'RESULTS/'                            ; output directory for inversion results
-  modeldir = '/project/arf/nas/output/'                  ; base directory of FLEXPART model output
+  modeldir = '/project/brd134/maiolica/output/'                  ; base directory of FLEXPART model output
   ;;hdir = '/project/arf/nas/arf/INVERSION/SENSITIVITIES/FINAL/'     ; directory to store weekly sensitivities per station
   hdir = basedir+'SENSITIVITIES/'                        ; directory to store weekly sensitivities per station
-  ;;wdcggdir = '/nas/input/WDCGG/'                       ; directory of original CH4 data
-  wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
-  wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG2017/'
+  ;;wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
+  wdcggdir = '/project/brd134/maiolica/GAW_WDCGG2017/'
 
   ntrace = 48                                            ; number of tracers
   nage = 5                                               ; number of age classes
@@ -335,9 +334,10 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   ok = 1
 
   ;; get list of stations and uncertainty scaling factors
-  inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
+  inv_station_settings,sconfig,stats=stats,ufact=ufact,ok=ok
   IF NOT ok THEN RETURN,-1
 
+  ;; amplify all uncertainties by constant factor 1.75
   ufact = ufact * 1.75
 
   ;IF run EQ '32.8' OR run EQ '22.4' THEN ufact = ufact * 1.5
@@ -356,7 +356,7 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   ;;startcf[*] = 1/0.98871541  ; first global scaling
   ;;startcf[*] =1.0275         ; 2nd global scaling
   
-  ;; first scaling per category
+  ;; refined scaling per category
   ;;startcf = [1.00000,1.00000,1.00000,1.00000,1.04629,1.04930,1.00000,1.00000,$
   ;;          1.00000,1.00000,1.17080,1.00000,1.02708,1.00000,1.05412,1.00132,$
   ;;          1.04544,1.21240,1.06390,1.00000,1.24261,0.955105,1.11636,1.00000,$
@@ -378,15 +378,14 @@ FUNCTION inv_configurations_brd,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   ;;                0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
   ;;                0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
   ;;                2.27135,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
+  
+  ;; same as above but scaling for south american temperate wetlands set to 1.0 instead of 2.27
   startcf = [0.990934,0.998725,0.966918,0.970774,0.969145,0.988575,0.967936,0.989237,$
              0.999264,1.08774,0.980201,1.02635,0.990535,1.00026, 0.995482,0.6,$
              1.00258,0.988409,0.964153,0.999978,1.26844,1.12428,0.915826,0.972333,$
              0.997255,0.954269,0.970943,0.999860,0.954971,0.996703,0.987350,0.964997,$
              0.951639,0.989671,0.958195,0.997164,0.905059,0.898224,0.961744,1.03772,$
              1.0,0.882971,0.910372,0.969549,1.00155,0.983641,1.10581,0.885359]
-  startcf[*] = 1.0
-  ;; BB North America overestimated
-  ;;startcf[16]=0.6
 
   sn   = STRCOMPRESS(string(fix(n_elements(stats))),/REM)+'stats'
   qunc = 'opt'+STRCOMPRESS(string(total(scaleq)),/REM)

@@ -9,7 +9,7 @@
 ;   calculate the aposteriori emissions and their uncertainties.
 ;
 ;   Sp = aposteriori emissions calculated for year and month
-;   Sa = apriori emissions from read_emissions_brd.pro
+;   Sa = apriori emissions from read_emissions.pro
 ;   Qa = apriori covariance matrix of emissions uncertainties
 ;   Qp = aposteriori covariance matrix of emissions uncertainties
 ;   HT = transpose of the sensitivity matrix
@@ -39,7 +39,7 @@
 ; INPUTS:
 ;
 ;       sim       (structure)          : model simulation information structure
-;                                        (see inv_run_brd.pro for details)
+;                                        (see inv_run.pro for details)
 ;       yyyymm    (string)             : year and month of current inversion step
 ;       fprev     (fltarr)             : background correction factor(s) calculated for previous
 ;                                        month, input for current step
@@ -82,7 +82,7 @@
 ; CSP 04 Jan 2012
 ; BRD 20 Nov 2017: simplified and adjusted to new structure of sim
 ; BRD 05 Jan 2018: adjusted to new netcdf input and ouptut files and renamed
-;                  from inv_determine_aposteriori_brd to inv_kalman_step
+;                  from inv_determine_aposteriori to inv_kalman_step
 ;-
 
 ;******************************************************************************
@@ -128,7 +128,7 @@ PRO inv_kalman_step,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   ;; read apriori emissions of current year/month
   ;;*********************************************
   ;; units: kg/day
-  read_emissions_brd,sim,yyyymm,m3=0,sa=sa
+  read_emissions,sim,yyyymm,m3=0,sa=sa
   
   month1 = yyyymm eq sim.syyyymm
   month2 = yyyymm eq STRMID(gvtime2dtg(dtg2gvtime(sim.syyyymm)+40D),0,6)
@@ -287,7 +287,7 @@ PRO inv_kalman_step,sim,yyyymm,fprev=fprev,fcorr=fcorr,$
   ;;********************************
 
   BG = DblArr(nc,sim.ntrace)
-  inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr  
+  inv_background,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr  
   
   FOR it=0,sim.ntrace-1 DO BEGIN
      FOR i=0,nc-1 DO BG[i,it] = fcorr[it]*(ch4mod[i].ch4trace[(sim.nage-1)*sim.ntrace+it])       

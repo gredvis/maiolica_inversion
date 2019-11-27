@@ -21,7 +21,7 @@
 ; INPUTS:
 ;
 ;  sim                (structure) : the model simulation information structure
-;                                  (see inv_configurations_brd.pro for details)
+;                                  (see inv_configurations.pro for details)
 ;  yyyymm             (string)    : the year and month for which to get the data
 ;
 ; KEYWORD PARAMETERS:

@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;  READ_ORIG_MODEL_DATA_BRD
+;  READ_ORIG_MODEL_DATA
 ;
 ; PURPOSE:
 ;
@@ -14,7 +14,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,mch4=ch4stat,trace=ch4trace,$
+;   read_orig_model_data,sim,yyyy,ch4obs=ch4obs,mch4=ch4stat,trace=ch4trace,$
 ;                        nmod=numstat,mdtg=dtgstat,oldest=oldest
 ;
 ; INPUTS:
@@ -60,7 +60,7 @@
 ; MODIFICATION HISTORY:
 ; 
 ;   Dominik Brunner, 09 Jan 2016: first implementation
-;       Routines extracted from read_weekly_model_data_all_brd.pro 
+;       Routines extracted from read_weekly_model_data_all.pro 
 ;       and simplified.
 ;   DB 11 Feb 2017: modified to return array of structures with
 ;       same dimension as observation array ch4obs
@@ -71,7 +71,7 @@
 ;***************************************************************************************
 ;*  subroutine to read in daily FLEXPART receptor output for a complete year
 ;***************************************************************************************
-PRO read_receptor_output_brd,sim,yyyy,ntime=ntime,time=timecollect,$
+PRO read_receptor_output,sim,yyyy,ntime=ntime,time=timecollect,$
                              mch4=mch4collect,mtrace=mtracollect
 
   nmonths = 12
@@ -88,9 +88,9 @@ PRO read_receptor_output_brd,sim,yyyy,ntime=ntime,time=timecollect,$
   
     yyyymm = yyyy+STRING(im+1,format='(i2.2)')
     IF keyword_set(sim.dlr) THEN BEGIN
-       read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+       read_receptors_dlr,sim,yyyymm,info=info,data=data,dtg=dtg
     ENDIF ELSE BEGIN
-       read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+       read_receptors_maiolica,sim,yyyymm,info=info,data=data,dtg=dtg
     ENDELSE
     IF n_elements(info) NE nst THEN BEGIN
        print,'not all stations found in receptor output'
@@ -112,7 +112,7 @@ END
 ;********************************************************************
 ;                   main routine
 ;********************************************************************
-PRO read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,ch4mod=ch4mod,oldest=oldest
+PRO read_orig_model_data,sim,yyyy,ch4obs=ch4obs,ch4mod=ch4mod,oldest=oldest
   
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'
@@ -120,7 +120,7 @@ PRO read_orig_model_data_brd,sim,yyyy,ch4obs=ch4obs,ch4mod=ch4mod,oldest=oldest
   ENDIF
 
   ; read receptor output at the nstat stations for the current year
-  read_receptor_output_brd,sim,yyyy,ntime=ntime,time=time,mch4=mch4,mtrace=mtrace
+  read_receptor_output,sim,yyyy,ntime=ntime,time=time,mch4=mch4,mtrace=mtrace
 
   ;; create output structure similar to ch4obs
   nobs = n_elements(ch4obs)

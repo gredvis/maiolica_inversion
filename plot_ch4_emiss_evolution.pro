@@ -11,7 +11,7 @@
 ;   Dominik Brunner, 4 Feb 2017
 ;-
   
-@inv_tools_brd
+@inv_tools
 PRO plot_ch4_emiss_evolution,plotmap=plotmap,emiss=emiss,eps=eps
 
   IF keyword_set(plotmap) THEN load_ctb,'bgyr18.ctb'

@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   inv_background_brd
+;   inv_background
 ;
 ; PURPOSE:
 ;
@@ -36,7 +36,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
+;  inv_background,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
 ;
 ; INPUTS:
 ;       sim       = the simulation structure (see inv_configuration for details)
@@ -70,7 +70,7 @@
 ; BRD 23 November 2017, small adjustments to new structure of sim. This simplifies
 ;                       the call since structure sim already contains most information.
 ;-
-PRO inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
+PRO inv_background,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameters sim missing in call'
@@ -93,7 +93,7 @@ PRO inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
   ;********************************************************************************
   mass4a = DblArr(sim.ntrace)
 
-  read_totals_for_inv_brd,sim,yyyymm,data=data
+  read_totals_for_inv,sim,yyyymm,data=data
   s    = size(data.budget) 
   nlen = s[3]
   
@@ -109,7 +109,7 @@ PRO inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
   ;; previous month
   pyyyymm = STRMID(gvtime2dtg(dtg2gvtime(yyyymm+'010000')-10),0,6)
 
-  read_totals_for_inv_brd,sim,pyyyymm,data=data
+  read_totals_for_inv,sim,pyyyymm,data=data
   s    = size(data.budget) 
   nlen = s[3]
   ;data.budget[1,2,3] 1: tracer, 2: ncats categories, need mass => 0 ,3: time
@@ -120,7 +120,7 @@ PRO inv_background_brd,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
   ; READ APRIORI EMISSIONS FROM MONTH i-3
   ;********************************************************************************  
   ; set keyword m3: get apriori emissions from three months prior the actual month
-  read_emissions_brd,sim,yyyymm,/m3,sa=sa
+  read_emissions,sim,yyyymm,/m3,sa=sa
 
   ;********************************************************************************
   ; CALCULATE BACKGROUND CORRECTION FACTOR

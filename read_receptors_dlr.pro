@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   read_receptors_dlr_brd
+;   read_receptors_dlr
 ;
 ; PURPOSE:
 ;
@@ -14,12 +14,12 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   read_receptors_dlr_brd,sim,yyyymm,info=info,data=data
+;   read_receptors_dlr,sim,yyyymm,info=info,data=data
 ;
 ; INPUTS:
 ;
 ;       sim      :  structure with all information about the simulation
-;                   see inv_configurations_brd.pro for details
+;                   see inv_configurations.pro for details
 ;       yyyymm   : (STRING) year and month for which to get receptor output
 ;           
 ;
@@ -59,7 +59,7 @@
 ;  Dominik Brunner (DB), Empa
 ;  DB, 2 Dec 2017: replaces Florian Arfeuille's read_receptors_DLR_final.pro 
 ;-
-PRO read_receptors_dlr_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+PRO read_receptors_dlr,sim,yyyymm,info=info,data=data,dtg=dtg
 
   ok=0
   IF n_elements(sim) EQ 0 THEN BEGIN

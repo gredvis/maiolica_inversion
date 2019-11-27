@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   inv_tools_brd (library)
+;   inv_tools (library)
 ;
 ; PURPOSE
 ;   library of support routines for the MAIOLICA-II inverse modelling
@@ -164,7 +164,7 @@ PRO station_rcpt_levs,stats,levs=levs,check=check
   ;; optimal FLEXPART receptor levels
   rec = {name:'',lev:0}
   allstat = replicate(rec,93)
-  file='/home/brd134/IDL/arfeuille_final/choice_modellevel_station_93.dat'
+  file='/project/brd134/maiolica/input/choice_modellevel_station_93.dat'
   openr,lun,file,/get_lun
   readf,lun,allstat,format='(a3,2x,i4)'
   free_lun,lun
@@ -174,7 +174,7 @@ PRO station_rcpt_levs,stats,levs=levs,check=check
 
   IF keyword_set(check) THEN BEGIN
      ;; check how well station level agrees with station altitude
-     erafile = '/project/arf/nas/input/ERAInterim_surface_fields.nc'
+     erafile = '/project/brd134/maiolica/input/ERAInterim_surface_fields.nc'
      ncid = ncdf_open(erafile)
      varid = ncdf_varid(ncid,'lon')
      ncdf_varget,ncid,varid,lon
@@ -205,7 +205,14 @@ PRO station_rcpt_levs,stats,levs=levs,check=check
            ENDIF
         ENDIF
      ENDFOR
-  ENDIF
+  ENDIF ELSE BEGIN
+
+     ;; subset stations belonging to the station list
+     FOR i=0,nstat-1 DO BEGIN
+        index = WHERE(allstat.name EQ stats[i],cnt)
+        IF cnt EQ 1 THEN levs[i]=strcompress(allstat[index[0]].lev,/rem)
+     ENDFOR
+  ENDELSE
   
 END
 
@@ -520,7 +527,7 @@ FUNCTION read_receptor_list
 
   ;; attention, file 199001 contains 347 receptors, but all files starting
   ;; with 199002 have 341 receptors
-  file ='/project/arf/nas/output/final_sim01/19900201/receptor_pptv.nc'
+  file ='/project/brd134/maiolica/output/final_sim01/19900201/receptor_pptv.nc'
   ncid = ncdf_open(file)
   
   dimyid=ncdf_dimid(ncid,'rec')
@@ -592,7 +599,7 @@ PRO check_stationlist,sim,yyyymm
 ; used for FLEXPART runs
 ;-
   IF n_elements(yyyymm) EQ 0 THEN yyyymm='200501'
-  read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+  read_receptors_maiolica,sim,yyyymm,info=info,data=data,dtg=dtg
 
   FOR i=0,n_elements(info)-1 DO BEGIN
      sstr = STRSPLIT(info[i].rcptname,' ',/extract)

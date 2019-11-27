@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   inv_station_settings_brd
+;   inv_station_settings
 ;
 ; PURPOSE:
 ;
@@ -15,7 +15,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;    inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
+;    inv_station_settings,sconfig,stats=stats,ufact=ufact,ok=ok
 ;
 ; INPUTS:
 ;
@@ -57,7 +57,7 @@
 ;   DB, 04 Jan 2017:  first implementation
 ;-
 
-PRO inv_station_settings_brd,sconfig,stats=stats,ufact=ufact,ok=ok
+PRO inv_station_settings,sconfig,stats=stats,ufact=ufact,ok=ok
 
   ok = 0
 

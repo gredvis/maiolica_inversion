@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   read_totals_for_inv_brd
+;   read_totals_for_inv
 ;
 ; PURPOSE:
 ;
@@ -16,7 +16,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   read_totals_for_inv_brd,sim,yyyymm,data=data
+;   read_totals_for_inv,sim,yyyymm,data=data
 ;
 ; INPUTS:
 ;
@@ -54,7 +54,7 @@
 
 ;--------------------------------------------------------------------
 
-PRO read_totals_for_inv_brd,sim,yyyymm,data=data
+PRO read_totals_for_inv,sim,yyyymm,data=data
 
   ;; Attention: totals output for month i is in directory for month i+1
   yyyymmp1 = STRMID(gvtime2dtg(dtg2gvtime(yyyymm+'010000')+40),0,6)
@@ -64,7 +64,7 @@ PRO read_totals_for_inv_brd,sim,yyyymm,data=data
   filename   = dirt+'totals'
 
   ; call header reading routine
-  read_flexpart_header_brd,filename=fileheader,header=header
+  read_flexpart_header,filename=fileheader,header=header
 
   ; define variables for reading
   itime  = 0L

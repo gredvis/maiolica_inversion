@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;  read_receptors_maiolica_brd
+;  read_receptors_maiolica
 ;
 ; PURPOSE:
 ;
@@ -17,7 +17,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+;   read_receptors_maiolica,sim,yyyymm,info=info,data=data,dtg=dtg
 ;
 ; INPUTS:
 ;
@@ -54,7 +54,7 @@
 ;
 ; EXAMPLE:
 ;
-;  sim = inv_configurations_brd(run='NEW_DLR',sconfig='flask_DLR2',ok=ok)
+;  sim = inv_configurations(run='NEW_DLR',sconfig='flask_DLR2',ok=ok)
 ;
 ;  yyyymm = '200401' ; get receptor point values for Jan 2004
 ;  read_receptors_maiolica_final,sim,yyyymm,info=info,data=data
@@ -66,7 +66,7 @@
 
 ;--------------------------------------------------------------------
 
-PRO read_receptors_maiolica_brd,sim,yyyymm,info=info,data=data,dtg=dtg
+PRO read_receptors_maiolica,sim,yyyymm,info=info,data=data,dtg=dtg
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      message,'parameter sim missing in call',/continue

@@ -1,12 +1,12 @@
 ;+
 ; NAME:
-;    read_wdcgg_brd
+;    read_wdcgg
 ;
 ; PURPOSE:
 ;     Reads data from WDCGG files at /nas/input/WDCGG...
 ;
 ; CALLING SEQUENCE:
-;     read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
+;     read_wdcgg,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
 ;                     values=values,flag=flag,ndata=ndata,characteristics=characteristics,$
 ;                     filter=filter,statfilt=statfilt
 ;
@@ -35,7 +35,7 @@
 ;                               additional filtering for non-background data,
 ;                               improved file doc header, small changes to parameter passing
 ;-
-PRO read_wdcgg_brd,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
+PRO read_wdcgg,file=file,contri=contri,lat=lat,lon=lon,cal=cal,gvtimes=gvtimes,$
                    values=values,flag=flag,ndata=ndata,characteristics=characteristics,$
                    filter=filter,statfilt=statfilt
   

@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   plot_growth_rates_brd
+;   plot_growth_rates
 ;
 ; PURPOSE:
 ;
@@ -14,7 +14,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;   plot_growth_rates_brd,sim,lat=lat
+;   plot_growth_rates,sim,lat=lat
 ;
 ; INPUTS:
 ;
@@ -49,7 +49,7 @@
 ;******************************************************************************
 ;MAIN PROGRAM
 ;******************************************************************************
-PRO plot_growth_rates_brd,sim,prelim=prelim,sort=sort,eps=eps
+PRO plot_growth_rates,sim,prelim=prelim,sort=sort,eps=eps
 
   IF n_elements(sim) EQ 0 THEN BEGIN
      print,'parameter sim missing in call'

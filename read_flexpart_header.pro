@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   read_flexpart_header_brd
+;   read_flexpart_header
 ;
 ; PURPOSE:
 ;
@@ -14,7 +14,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  read_flexpart_header_brd,filename=filename,header=header
+;  read_flexpart_header,filename=filename,header=header
 ;
 ; INPUTS:
 ;
@@ -63,12 +63,12 @@
 ;                     fields are now also reversed.
 ;     23 Nov 2017 (DB):
 ;                     Changed routine name from read_header_maiolica2 to
-;                     read_flexpart_header_brd
+;                     read_flexpart_header
 ;-
 
 ;--------------------------------------------------------------------
 
-PRO read_flexpart_header_brd,filename=filename,header=header
+PRO read_flexpart_header,filename=filename,header=header
 
 date=0L
 time=0L

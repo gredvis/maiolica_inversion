@@ -42,7 +42,7 @@
 ;          inv_configuration.pro and inv_station_settings.
 ;-
 
-@inv_tools_brd.pro
+@inv_tools.pro
 
 PRO run_inversion_final,sim=sim,dlr=dlr
 
@@ -60,7 +60,7 @@ PRO run_inversion_final,sim=sim,dlr=dlr
   ;;sconfig = 'flask_DLR2'        ; options are 'flask', 'all', 'special', 'flask_DLR2'
   sconfig = 'brd'               ; options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
 
-  sim = inv_configurations_brd(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
+  sim = inv_configurations(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
   IF NOT ok THEN RETURN
 
   ;; activate steps
@@ -71,7 +71,7 @@ PRO run_inversion_final,sim=sim,dlr=dlr
   step3 = 1   ; step3: run preliminary inversion to compute aposteriori model-data mismatch
   step4 = 1   ; step4: compute model-data mismatch second time using aposteriori model data
   step5 = 1   ; step5: run final inversion
-  step6 = 0   ; step6: run plot programs      
+  step6 = 1   ; step6: run plot programs      
     
   ;************************************************************************
   ; start program chain:
@@ -98,7 +98,7 @@ PRO run_inversion_final,sim=sim,dlr=dlr
   ;;    in the following, improved observational errors can be calculated
   IF keyword_set(step3) THEN BEGIN
      print, '3. Run preliminary inversion'
-     inv_run_brd,sim,/prelim
+     inv_run,sim,/prelim
      ;; add posteriori fields to station output
      inv_create_monthly_station_output,sim,/prelim,/append
   ENDIF ELSE BEGIN
@@ -116,7 +116,7 @@ PRO run_inversion_final,sim=sim,dlr=dlr
   ;; 5. run inversion second time to obtain final estimates
   IF keyword_set(step5) THEN BEGIN
      print, '5. Run final inversion'
-     inv_run_brd,sim
+     inv_run,sim
      ;; write out monthly mean station output (obs and model prior and posterior)
      inv_create_monthly_station_output,sim
   ENDIF ELSE BEGIN
@@ -132,13 +132,13 @@ PRO run_inversion_final,sim=sim,dlr=dlr
      print, 'Plotting now ...'
 
      ;; plot a priori, a posteriori and observed station time series
-     plot_inv_timeseries_brd,sim,/map,/eps
+     plot_inv_timeseries,sim,/map,/eps
 
      ;; plot growth rates
-     plot_growth_rates_brd,sim,/eps
+     plot_growth_rates,sim,/eps
      
      ;; plot xhisquare statistics
-     plot_xhisquare_statistics,sim,/eps
+     plot_chisquare_statistics,sim,/eps
 
      ;; 8. plot anomalies of emissions
      ;plot_inv_emissions_anomalies_paper_maiolica_final,sim,rel=0

@@ -2,7 +2,7 @@
 ; READ MONTHLY EMISSIONS OF ACTUAL MONTH OR 4 MONTHS BEFORE
 ; UNITS ARE kg/day
 ;*************************************************************
-PRO read_emissions_brd,sim,yyyymm,m3=m3,sa=sa
+PRO read_emissions,sim,yyyymm,m3=m3,sa=sa
 
   trdir      = sim.basedir + 'SOURCESTRENGTHS/'
 

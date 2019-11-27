@@ -1,7 +1,7 @@
 ;+
 ; NAME:
 ;
-;   inv_run_brd
+;   inv_run
 ;
 ; PURPOSE:
 ;
@@ -20,7 +20,7 @@
 ;
 ; CALLING SEQUENCE:
 ;
-;  inv_run_brd,sim,Hdump=Hdump,prelim=prelim,result=result
+;  inv_run,sim,Hdump=Hdump,prelim=prelim,result=result
 ;
 ;
 ; INPUTS:
@@ -268,7 +268,7 @@ END
 
 ;*************************** main **********************************
 
-PRO inv_run_brd,sim,Hdump=Hdump,prelim=prelim,result=result
+PRO inv_run,sim,Hdump=Hdump,prelim=prelim,result=result
 
   sstart = STRCOMPRESS(string(sim.startcf),/REM)
   print, 'start scaling factors = ', sstart

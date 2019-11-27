@@ -24,7 +24,7 @@
 ; INPUTS:
 ;
 ;    sim (STRUCTURE)  : the simulation information structure
-;                       see inv_configurations_brd.pro
+;                       see inv_configurations.pro
 ;
 ; KEYWORD PARAMETERS:
 ;
