@@ -14,7 +14,7 @@
 ;   Qp = aposteriori covariance matrix of emissions uncertainties
 ;   HT = transpose of the sensitivity matrix
 ;   R  = observation error covariance matrix
-;   Z  = observational data as read from read_processed_obs_data_month.pro
+;   Z  = observational data as read from read_obsmod_netcdf_month
 ;   BG = calculated background concentration on the basis of
 ;        inv_background_yearmonth.pro, through which the background
 ;        correction factor fcorr is calculated

@@ -37,8 +37,8 @@
 ;         qunc:qunc,$                       ; string 'optUU.U' with total a priori uncertainty
 ;                                           ; used for file names 
 ;         dlr:dlr,$                         ; =0 for FLEXPART, =1 for DLR output processing
-;         obsdir:obsdir,$                   ; directory of pre-processed obs data
-;         modeldir:modeldir,$               ; base directory of FLEXPART model output
+;         obsmoddir:obsmoddir,$             ; directory of pre-processed obs and model data
+;         modeldir:modeldir,$               ; base directory of FLEXPART or EMAC model output
 ;                                           ; model output will be in modeldir/name
 ;         outdir:outdir,$                   ; directory of inversion output
 ;         hdir:hdir,$                       ; directory of station sensitivities
@@ -98,13 +98,16 @@ FUNCTION inv_configurations,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   ELSE $
      basedir = '/project/brd134/maiolica/INVERSION/'             ; base directory for intermediate and final files
 
-  obsdir = basedir+'OBSINPUT/'                           ; directory of pre-processed observation data
-  moddir = basedir+'MODINPUT/'                           ; directory of pre-processed model data
-  obsmoddir = basedir+'OBSMODINPUT/'                     ; directory of pre-processed obs and model data in netcdf format
-                                                         ; (basically makes obsdir and moddir redunctant)
+  obsmoddir = basedir+'OBSMODINPUT/'                     ; directory of pre-processed obs and model data (netcdf)
   errcovdir = basedir+'ERRORCOVARIANCE/'                 ; directory of station errors (diff model - station)
   outdir = basedir+'RESULTS/'                            ; output directory for inversion results
-  modeldir = '/project/brd134/maiolica/output/'                  ; base directory of FLEXPART model output
+
+  IF keyword_set(dlr) THEN BEGIN
+     modeldir = '/project/brd134/maiolica/input/EMAC_OUTPUT/' ; base directory of EMAC model output
+  ENDIF ELSE BEGIN
+     modeldir = '/project/brd134/maiolica/input/FLEXPART_OUTPUT/' ; base directory of FLEXPART model output
+  ENDELSE
+
   ;;hdir = '/project/arf/nas/arf/INVERSION/SENSITIVITIES/FINAL/'     ; directory to store weekly sensitivities per station
   hdir = basedir+'SENSITIVITIES/'                        ; directory to store weekly sensitivities per station
   ;;wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
@@ -397,8 +400,6 @@ FUNCTION inv_configurations,run=run,sconfig=sconfig,dlr=dlr,ok=ok
          dlr:keyword_set(dlr),$ ; flag for DLR output
          dlrscale:dlrscale,$    ; scaling factor to correct low bias in DLR data, default is 1.04
          basedir:basedir,$      ; base directory of inversion output
-         obsdir:obsdir,$        ; directory of pre-processed weekly observation data
-         moddir:moddir,$        ; directory of pre-processed weekly model data
          obsmoddir:obsmoddir,$  ; directory of pre-processed weekly obs and model data in netcdf format
          errcovdir:errcovdir,$  ; directory with diagnonal elements of model-data mismatch uncert
          outdir:outdir,$        ; results directory

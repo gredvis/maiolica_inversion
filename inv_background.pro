@@ -109,6 +109,10 @@ PRO inv_background,sim,yyyymm,fprev=fprev,em3_apost=em3_apost,fcorr=fcorr
   ;; previous month
   pyyyymm = STRMID(gvtime2dtg(dtg2gvtime(yyyymm+'010000')-10),0,6)
 
+  IF keyword_set(sim.dlr) THEN BEGIN
+     message,'reading of totals per category not implemented for DLR'
+     stop
+  ENDIF
   read_totals_for_inv,sim,pyyyymm,data=data
   s    = size(data.budget) 
   nlen = s[3]

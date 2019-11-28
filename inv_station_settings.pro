@@ -21,7 +21,7 @@
 ;
 ;   sconfig: the station configuration, must be one of
 ;            'flask', 'flask_12', 'flask_DLR1', 'flask_DLR2', 'all', 'special'
-;            The configuration 'flask_DLR2' is probably the one used for the publication.
+;            The configuration 'flask_DLR2' is probably the one used for Florian's publication.
 ;
 ; OUTPUTS:
 ;

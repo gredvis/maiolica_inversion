@@ -47,23 +47,27 @@
 PRO run_inversion_final,sim=sim,dlr=dlr
 
   ;; basic simulation configuration and directory settings
-  ;; run = 'NEW_DLR'
-  run = '22.4'
-  run = '25.1'
+  IF keyword_set(dlr) THEN BEGIN
+     run = 'NEW_DLR'
+  ENDIF ELSE BEGIN
+     run = '25.1'
+  ENDELSE
+ 
+  ;; run with smaller uncertainties
+  ;; run = '22.4'
 
-  ;; larger uncertainties, especially for wetland emissions
-  ;; Dominik with uncert = 0.4 for anthrop, 0.8 for bb, rice, wetl, 0.5 for rest
+  ;; tests with larger uncertainties, especially for wetland emissions
+  ;; with uncert = 0.4 for anthrop, 0.8 for bb, rice, wetl, 0.5 for rest
   ;run = '32.8'
   ;run = '65.6'      
 
-  ;;sconfig = 'flask'             ; options are 'flask', 'all', 'special'
-  ;;sconfig = 'flask_DLR2'        ; options are 'flask', 'all', 'special', 'flask_DLR2'
+  ;; station configuration (the latest used is brd (= Brunner Dominik's selection)
   sconfig = 'brd'               ; options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
 
   sim = inv_configurations(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
   IF NOT ok THEN RETURN
 
-  ;; activate steps
+  ;; activate (1) or deactivate (0) processing steps
   step1 = 0   ; step1: create monthly files of weekly mean observation and model data
               ; needs to be called only once for FLEXPART or EMACs, since the output is
               ; generated for all available sites irrespective of the simulation settings

@@ -50,9 +50,10 @@
 ;
 ; EXAMPLE:
 ;
-;  sim.modeldir = '/nas/spc134/URMEL/FLEXPART80CTP/output/URMEL_CTRL_II/'
+;  sim = inv_configurations(run=run,sconfig=sconfig,dlr=dlr,ok=ok)
+;  sim.modeldir = '/project/brd134/maiolica/input/EMAC_OUTPUT/'
 ;  yyyymm = '200401' ; get receptor point values for Jan 2004
-;  read_receptors_urmel,sim=sim,yyyymm=yyyymm,info=info,data=data
+;  read_receptors_dlr,sim=sim,yyyymm=yyyymm,info=info,data=data
 ;
 ; MODIFICATION HISTORY:
 ;
@@ -72,11 +73,11 @@ PRO read_receptors_dlr,sim,yyyymm,info=info,data=data,dtg=dtg
   ENDIF
 
   ;; directory of DLR model output
-  dlrdir = sim.modeldir+'DLR/empa/'
+  dlrdir = sim.modeldir+'empa/'
   
   ;; problem with netcdf library made it necessary to copy files to /bigdat
   ;; see https://groups.google.com/forum/#!topic/comp.lang.idl-pvwave/5dbp8dV1q3U
-  dlrdir = '/bigdat/brd134/tmp/empa/'
+  ;;dlrdir = '/bigdat/brd134/tmp/empa/'
 
   ;; names of variables used in DLR output
   cat = emiss_categories(/dlr,labels=labels)
