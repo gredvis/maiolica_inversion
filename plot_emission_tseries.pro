@@ -23,7 +23,7 @@
 ; KEYWORD PARAMETERS:
 ;
 ; /eps: set keyword to generate postscript files in directory
-;       sim.basedir + 'FIGURES/EMISSIONS/'
+;       sim.invdir + 'FIGURES/EMISSIONS/'
 ;
 ; OUTPUTS:
 ;             

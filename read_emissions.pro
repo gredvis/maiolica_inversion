@@ -4,7 +4,7 @@
 ;*************************************************************
 PRO read_emissions,sim,yyyymm,m3=m3,sa=sa
 
-  trdir      = sim.basedir + 'SOURCESTRENGTHS/'
+  trdir      = sim.invdir + 'SOURCESTRENGTHS/'
 
   IF keyword_set(m3) THEN BEGIN
      ;; get month for time i-4 by subtracting 100 days 

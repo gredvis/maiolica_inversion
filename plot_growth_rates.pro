@@ -23,7 +23,7 @@
 ; KEYWORD PARAMETERS:
 ;
 ; /eps: set keyword to generate postscript files in directory
-;       sim.basedir + 'FIGURES/GROWTHRATES/'
+;       sim.invdir + 'FIGURES/GROWTHRATES/'
 ;
 ; OUTPUTS:
 ;             
@@ -63,7 +63,7 @@ PRO plot_growth_rates,sim,prelim=prelim,sort=sort,eps=eps
   ENDELSE
 
   IF keyword_set(eps) THEN BEGIN
-     psdir = sim.basedir + 'FIGURES/GROWTHRATES/'
+     psdir = sim.invdir + 'FIGURES/GROWTHRATES/'
      suffix = '.eps'
      xthick = 2 & ythick = 2
      linethick = 2

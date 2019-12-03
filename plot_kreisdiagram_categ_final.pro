@@ -126,7 +126,7 @@ PRO plot_kreisdiagram_final,sim,cat=cat
   rela2=samean2/suma
   relp2=spmean2/sump
   
-  plotdir = sim.basedir + 'FIGURES/'
+  plotdir = sim.invdir + 'FIGURES/'
   plotfile = plotdir+'total_emission_kreis'+cat+'.eps'
   load_ctb,'/home/spc134/IDL/GEOP/diff3.ctb'
   open_ps,plotfile,pssize=[24,20],/eps,/color

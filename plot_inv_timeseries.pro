@@ -115,7 +115,7 @@ PRO plot_inv_timeseries,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
   IF NOT keyword_set(prior) AND NOT keyword_set(post) THEN pripost=1 ELSE pripost=0
 
   IF keyword_set(eps) THEN BEGIN
-     psdir = sim.basedir + 'FIGURES/TSERIES/'
+     psdir = sim.invdir + 'FIGURES/TSERIES/'
      suffix = '.eps'
      IF keyword_set(prior) THEN suffix = '_prior.eps'
      IF keyword_set(post) THEN suffix = '_posterior.eps'
@@ -339,7 +339,7 @@ PRO plot_inv_timeseries,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
         IF keyword_set(eps) THEN BEGIN
            symsize=1.5
            figname = 'map_bias_'+sstr+'-'+estr+'_'+sim.sn+'_'+sim.name+'_'+sim.qunc+pstr+suffix
-           filename = sim.basedir + 'FIGURES/MAPS/'+figname
+           filename = sim.invdir + 'FIGURES/MAPS/'+figname
            open_ps,filename,/eps,/color,pssize=[18,12],tt_type='Helvetica'
         ENDIF ELSE BEGIN
            window,xsize=900,ysize=600
@@ -371,7 +371,7 @@ PRO plot_inv_timeseries,sim,syyyy=syyyy,eyyyy=eyyyy,prelim=prelim,prior=prior,$
         IF keyword_set(eps) THEN BEGIN
            symsize=1.5
            figname = 'map_r2_'+sstr+'-'+estr+'_'+sim.sn+'_'+sim.name+'_'+sim.qunc+pstr+suffix
-           filename = sim.basedir + 'FIGURES/MAPS/'+figname
+           filename = sim.invdir + 'FIGURES/MAPS/'+figname
            open_ps,filename,/eps,/color,pssize=[18,12],tt_type='Helvetica'
         ENDIF ELSE BEGIN
            window,xsize=900,ysize=600

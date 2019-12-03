@@ -51,7 +51,7 @@
 ; CSP 19 September 2011
 ;-
 
-PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
+PRO read_globalview_final,basedir,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
 
   days    = [31,28,31,30,31,30,31,31,30,31,30,31]
   schalt  = ['1984','1988','1992','1996','2000','2004','2008']
@@ -61,7 +61,7 @@ PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
   ndat = (2008-1984+1)*12L ; number of output dates
   nlat = 41                ; number of latitudes
 
-  file = '/project/arf/remote7/ref_mbl_mtx.ch4'
+  file = basedir+'/ref_mbl_mtx.ch4'
   n    = FILE_LINES(file)
 
   form      = ''
@@ -121,9 +121,9 @@ PRO read_globalview_final,latglob=lat,timeglob=uyyyymm,ch4glob=ch4
     ENDIF
   ENDFOR
 
-  hip     = dtg2hiptime(yyyymm)
-  syyyymm = hip(sort(hip))
-  uyyyymm = STRMID(hiptime2dtg(syyyymm(uniq(syyyymm))),0,6)
+  gvtime  = dtg2gvtime(yyyymm)
+  gvtime  = gvtime(sort(gvtime))
+  uyyyymm = STRMID(gvtime2dtg(gvtime(uniq(gvtime))),0,6)
 
   std = FltArr(ndat,nlat)
   FOR id=0,ndat-1 DO BEGIN

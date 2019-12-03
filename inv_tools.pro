@@ -160,11 +160,12 @@ END
 
 ;-------------------------------------------------------------------------------
 
-PRO station_rcpt_levs,stats,levs=levs,check=check
-  ;; optimal FLEXPART receptor levels
+PRO station_rcpt_levs,inputdir,stats,levs=levs,check=check
+
+  ;; get optimal FLEXPART receptor levels stored in a text file
   rec = {name:'',lev:0}
   allstat = replicate(rec,93)
-  file='/project/brd134/maiolica/input/choice_modellevel_station_93.dat'
+  file = inputdir+'choice_modellevel_station_93.dat'
   openr,lun,file,/get_lun
   readf,lun,allstat,format='(a3,2x,i4)'
   free_lun,lun
@@ -174,7 +175,7 @@ PRO station_rcpt_levs,stats,levs=levs,check=check
 
   IF keyword_set(check) THEN BEGIN
      ;; check how well station level agrees with station altitude
-     erafile = '/project/brd134/maiolica/input/ERAInterim_surface_fields.nc'
+     erafile = maiolicadir+'/input/ERAInterim_surface_fields.nc'
      ncid = ncdf_open(erafile)
      varid = ncdf_varid(ncid,'lon')
      ncdf_varget,ncid,varid,lon

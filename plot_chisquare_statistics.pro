@@ -26,7 +26,7 @@
 ;  /rapriori         : set this keyword to plot statistics for first inversion based
 ;                      on model-data mismatches calculated fror a priori simulation
 ;  /eps              : set this keyword to create postscript files in 
-;                      sim.basedir + 'FIGURES/CHISTATS/'
+;                      sim.invdir + 'FIGURES/CHISTATS/'
 ;
 ; OUTPUTS:
 ;
@@ -66,7 +66,7 @@ PRO plot_chisquare_statistics,sim,s2=s2,prelim=prelim,eps=eps
 
   IF n_elements(sim) EQ 0 THEN RETURN
   
-  psdir = sim.basedir + 'FIGURES/CHISTAT/'
+  psdir = sim.invdir + 'FIGURES/CHISTAT/'
 
   xrange = dtg2gvtime(['19900101','20130101'])
 

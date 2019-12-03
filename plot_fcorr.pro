@@ -8,7 +8,7 @@
 ;  from prior emissions.
 ;
 ;  Set keyword /prelim to plot results of first preliminary inversion
-;  Set keyword /eps to create a postscript plot in sim.basedir + 'FIGURES/FCORR/'
+;  Set keyword /eps to create a postscript plot in sim.invdir + 'FIGURES/FCORR/'
 ;-
 PRO plot_fcorr,sim,prelim=prelim,yrange=yrange,eps=eps
 
@@ -29,7 +29,7 @@ PRO plot_fcorr,sim,prelim=prelim,yrange=yrange,eps=eps
   xrange = dtg2gvtime(['19900101','20130101'])
 
   IF keyword_set(eps) THEN BEGIN
-     psdir = sim.basedir + 'FIGURES/FCORR/'
+     psdir = sim.invdir + 'FIGURES/FCORR/'
      figname = 'fcorr_'+sim.sn+'_'+sim.name+'_'+sim.syyyymm+'_'+sim.eyyyymm+'_'+sim.qunc+'.eps'
      filename = psdir+figname
      open_ps,filename,/eps,/color,pssize=[20,20],tt_type='Helvetica'

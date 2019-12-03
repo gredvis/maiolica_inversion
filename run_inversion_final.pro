@@ -68,7 +68,7 @@ PRO run_inversion_final,sim=sim,dlr=dlr
   IF NOT ok THEN RETURN
 
   ;; activate (1) or deactivate (0) processing steps
-  step1 = 0   ; step1: create monthly files of weekly mean observation and model data
+  step1 = 1   ; step1: create monthly files of weekly mean observation and model data
               ; needs to be called only once for FLEXPART or EMACs, since the output is
               ; generated for all available sites irrespective of the simulation settings
   step2 = 1   ; step2: compute model-data mismatch first time

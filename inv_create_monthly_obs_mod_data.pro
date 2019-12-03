@@ -795,7 +795,7 @@ PRO inv_create_monthly_obs_mod_data,obslist=obslist,dlr=dlr
 
   ;; read GLOBALVIEW reference data to identify clear outliers
   ;; Problem: data set only extends to 2009 and is no longer updated by NOAA
-  read_globalview_final,latglob=latglob,timeglob=timeglob,ch4glob=ch4glob
+  read_globalview_final,sim.inputdir,latglob=latglob,timeglob=timeglob,ch4glob=ch4glob
 
   obslist = LIST()
   plot = 1                      ; set plot = 1 to display observation data and outlier removal

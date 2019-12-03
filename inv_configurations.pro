@@ -90,37 +90,37 @@ FUNCTION inv_configurations,run=run,sconfig=sconfig,dlr=dlr,ok=ok
 
   ok = 0
 
-  name = 'final_sim01'                                   ; name of inversion run
-  syyyymm = '198902' & eyyyymm = '201212'                ; start and end date of inversion
-
+  basedir = '/scratch/snx3000/dbrunner/maiolica/'
+  
+  name = 'final_sim01'                    ; name of inversion run
+  syyyymm = '198902' & eyyyymm = '201212' ; start and end date of inversion
+  
   IF keyword_set(DLR) THEN $
-     basedir = '/project/brd134/maiolica/INVERSION_DLR/' $       ; base directory for intermediate and final files
+     invdir = basedir+'INVERSION_DLR/' $  ; base directory for intermediate and final inversion results
   ELSE $
-     basedir = '/project/brd134/maiolica/INVERSION/'             ; base directory for intermediate and final files
-
-  obsmoddir = basedir+'OBSMODINPUT/'                     ; directory of pre-processed obs and model data (netcdf)
-  errcovdir = basedir+'ERRORCOVARIANCE/'                 ; directory of station errors (diff model - station)
-  outdir = basedir+'RESULTS/'                            ; output directory for inversion results
-
+     invdir = basedir+'INVERSION/'        ; base directory for intermediate and final inversion results
+  
+  obsmoddir = invdir+'OBSMODINPUT/'       ; directory of pre-processed obs and model data (netcdf)
+  errcovdir = invdir+'ERRORCOVARIANCE/'   ; directory of station errors (diff model - station)
+  outdir = invdir+'RESULTS/'              ; output directory for inversion results
+  inputdir = basedir+'/input/'
   IF keyword_set(dlr) THEN BEGIN
-     modeldir = '/project/brd134/maiolica/input/EMAC_OUTPUT/' ; base directory of EMAC model output
+     modeldir = inputdir+'EMAC_OUTPUT/'   ; base directory of EMAC model output
   ENDIF ELSE BEGIN
-     modeldir = '/project/brd134/maiolica/input/FLEXPART_OUTPUT/' ; base directory of FLEXPART model output
+     modeldir = inputdir+'FLEXPART_OUTPUT/' ; base directory of FLEXPART model output
   ENDELSE
 
-  ;;hdir = '/project/arf/nas/arf/INVERSION/SENSITIVITIES/FINAL/'     ; directory to store weekly sensitivities per station
-  hdir = basedir+'SENSITIVITIES/'                        ; directory to store weekly sensitivities per station
-  ;;wdcggdir = '/project/arf/remote7/DATA/GAW_WDCGG/'
-  wdcggdir = '/project/brd134/maiolica/GAW_WDCGG2017/'
+  hdir = invdir+'SENSITIVITIES/'          ; directory to store weekly sensitivities per station
+  wdcggdir = inputdir+'GAW_WDCGG2017/'
 
-  ntrace = 48                                            ; number of tracers
-  nage = 5                                               ; number of age classes
-  weekly  = 1                                            ; use weekly means of observational and model data
-  keeppos = 1                                            ; take the logarithm of the emissions  
+  ntrace = 48                             ; number of tracers
+  nage = 5                                ; number of age classes
+  weekly  = 1                             ; use weekly means of observational and model data
+  keeppos = 1                             ; take the logarithm of the emissions  
 
   dlrscale = 1.03               ; default scaling factor for DLR output to compensate low
                                 ; bias with prescribed OH field
-
+  
   ;; station configuration
   IF n_elements(sconfig) EQ 0 THEN sconfig = 'flask' ; options are 'flask', 'all', 'special', 'brd', 'flask_DLR2'
 
@@ -348,7 +348,7 @@ FUNCTION inv_configurations,run=run,sconfig=sconfig,dlr=dlr,ok=ok
   ;IF (run EQ '32.8' OR run EQ '65.6') AND NOT keyword_set(dlr) THEN ufact = ufact * 0.68
 
   ;; get optimal FLEXPART receptor output levels for these sites
-  station_rcpt_levs,stats,levs=levs
+  station_rcpt_levs,inputdir,stats,levs=levs
 
   sn = STRCOMPRESS(n_elements(stats),/REM)              
   print, 'Run inversion with ', sn, ' stations'
@@ -399,9 +399,10 @@ FUNCTION inv_configurations,run=run,sconfig=sconfig,dlr=dlr,ok=ok
          qunc:qunc,$            ; string 'optUU.U' with total a priori uncertainty used for file names 
          dlr:keyword_set(dlr),$ ; flag for DLR output
          dlrscale:dlrscale,$    ; scaling factor to correct low bias in DLR data, default is 1.04
-         basedir:basedir,$      ; base directory of inversion output
+         invdir:invdir,$         ; base directory of inversion output
          obsmoddir:obsmoddir,$  ; directory of pre-processed weekly obs and model data in netcdf format
          errcovdir:errcovdir,$  ; directory with diagnonal elements of model-data mismatch uncert
+         inputdir:inputdir,$    ; base directory of input files
          outdir:outdir,$        ; results directory
          modeldir:modeldir,$
          wdcggdir:wdcggdir,$
