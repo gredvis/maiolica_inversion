@@ -75,7 +75,7 @@ PRO read_receptors_maiolica,sim,yyyymm,info=info,data=data,dtg=dtg
   
   ;; Attention: receptor output for month i is in directory for month i+1
   yyyymmp1 = STRMID(gvtime2dtg(dtg2gvtime(yyyymm+'010000')+40),0,6)
-  direc = sim.modeldir+sim.name+'/'+yyyymmp1+'01/'
+  direc = sim.modeldir+yyyymmp1+'01/'
 
   file = direc+'receptor_pptv.nc'
   nspec = sim.ntrace*sim.nage+1 ; including air_tracer

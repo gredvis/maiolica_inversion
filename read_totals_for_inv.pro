@@ -58,7 +58,7 @@ PRO read_totals_for_inv,sim,yyyymm,data=data
 
   ;; Attention: totals output for month i is in directory for month i+1
   yyyymmp1 = STRMID(gvtime2dtg(dtg2gvtime(yyyymm+'010000')+40),0,6)
-  dirt = sim.modeldir+sim.name+'/'+yyyymmp1+'01/'
+  dirt = sim.modeldir+yyyymmp1+'01/'
 
   fileheader = dirt+'header'
   filename   = dirt+'totals'

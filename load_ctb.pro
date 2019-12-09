@@ -55,8 +55,8 @@ IF file_search(expand_path(c_table)) EQ '' THEN BEGIN
    IF float(!version.release) GT 6.9 THEN start_dir='IDL_START_DIR' ELSE $
    start_dir = 'IDL_WDE_START_DIR'
    CASE strlowcase(!VERSION.OS_FAMILY) OF
-      'windows': default_dir=pref_get(start_dir)+'\gredvis\colortables\'
-      'unix': default_dir=expand_path('~')+'/IDL/gredvis/colortables/'
+      'windows': default_dir=pref_get(start_dir)+'\maiolica_inversion\colortables\'
+      'unix': default_dir=expand_path('~')+'/IDL/maiolica_inversion/colortables/'
       else: default_dir=''
    ENDCASE
 
